@@ -3,7 +3,7 @@
 ## Teammates 
 - [*Jared Larios](https://github.com/JaredLarios)
 - [Efehi Nehikhare]
-- [Angela Hubbard]
+- [Angela Hubbard] (https://github.com/motherhubbard99)
 - [Fabian Betancourt](https://github.com/fabianrbv)
 
 ### Quotes
