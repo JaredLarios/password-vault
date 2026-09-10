@@ -13,3 +13,5 @@ This project is a secure password manager designed to help users avoid reusing p
 - Jared Larios: _You must be the change you wish to see in the world_ - ___Mahatma Gandhi___
 - Fabian Betancourt: _The only way to do great work is to love what you do._ - ___Steve Jobs___
 - Patrick Armani: _Think celestial — even in the small things. ___President Russell M. Nelson___
+- Angie Hubbard: _Be yourself; everyone else is already taken. ___author unknown___
+
