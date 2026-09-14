@@ -40,4 +40,11 @@ public class AuthController : ControllerBase
             });
         }
     }
+
+    [HttpPost("logout")]
+    public IActionResult logout()
+    {
+        Response.Cookies.Delete("auth_token");
+        return Ok(new { message = "Logged out successfully" });
+    }
 }
