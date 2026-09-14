@@ -1,4 +1,4 @@
-namespace backend;
+namespace PasswordVault;
 
 public class WeatherForecast
 {
