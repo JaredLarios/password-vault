@@ -22,7 +22,10 @@ public class AuthService
         }
 
         IConfigurationSection jwtSettings = _config.GetSection("Jwt");
-        SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!));
+        string jwtKey = _config["JWT_SECRET_KEY"] ?? 
+            throw new KeyNotFoundException("JWT key not found");
+
+        SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         SigningCredentials signCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]

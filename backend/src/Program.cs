@@ -2,6 +2,9 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using PasswordVault.Auth;
+using dotenv.net;
+
+DotEnv.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +17,9 @@ builder.Services.AddAuthentication(options =>
 .AddJwtBearer(options =>
 {
     IConfigurationSection jwtSettings = builder.Configuration.GetSection("JWT");
+    string secretKey = builder.Configuration["JWT_SECRET_KEY"]
+        ?? throw new InvalidOperationException("JWT_SECRET_KEY is not configured.");
+
 
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -23,7 +29,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
     };
 
     options.Events = new JwtBearerEvents
