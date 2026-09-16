@@ -17,6 +17,4 @@ public class AppDbContext : DbContext
 
     public DbSet<UserModel> Users => Set<UserModel>();
     public DbSet<WebsiteModel> Websites => Set<WebsiteModel>();
-
-
 }

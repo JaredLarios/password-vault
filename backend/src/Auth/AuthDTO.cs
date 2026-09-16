@@ -2,7 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace PasswordVault.Auth;
 
-public class AuthDTO{
+public class AuthDTO
+{
     [Required]
     [EmailAddress]
     [StringLength(50)]

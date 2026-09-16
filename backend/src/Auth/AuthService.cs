@@ -10,7 +10,8 @@ public class AuthService
 {
     private readonly IConfiguration _config;
 
-    public AuthService(IConfiguration config) {
+    public AuthService(IConfiguration config)
+    {
         _config = config;
     }
 
@@ -22,7 +23,7 @@ public class AuthService
         }
 
         IConfigurationSection jwtSettings = _config.GetSection("Jwt");
-        string jwtKey = _config["JWT_SECRET_KEY"] ?? 
+        string jwtKey = _config["JWT_SECRET_KEY"] ??
             throw new KeyNotFoundException("JWT key not found");
 
         SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
