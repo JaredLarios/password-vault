@@ -4,7 +4,7 @@ using PasswordVault.Common.Interfaces;
 
 namespace PasswordVault.Common.Services;
 
-class CryptoFernet : ICrypto
+public class CryptoFernet : ICrypto
 {
     private string _secretKey;
 
