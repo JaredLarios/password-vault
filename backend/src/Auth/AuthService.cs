@@ -1,25 +1,46 @@
 using System.IdentityModel.Tokens.Jwt;
-using System.Runtime.Intrinsics.Arm;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using PasswordVault.Common.Database;
+using PasswordVault.Common.Services;
 
 namespace PasswordVault.Auth;
 
 public class AuthService
 {
     private readonly IConfiguration _config;
+    private readonly AppDbContext? _dbContext;
 
-    public AuthService(IConfiguration config)
+    public AuthService(IConfiguration config, AppDbContext? dbContext = null)
     {
         _config = config;
+        _dbContext = dbContext;
     }
 
     public async Task<(string Token, CookieOptions CookieOptions)> GetAuthTokenAsync(AuthDTO credentials)
     {
-        if (credentials.Username == string.Empty || credentials.Password == string.Empty)
+        if (string.IsNullOrWhiteSpace(credentials.Username) || string.IsNullOrWhiteSpace(credentials.Password))
         {
             throw new ArgumentException("Wrong User or Password.");
+        }
+
+        if (_dbContext is not null)
+        {
+            var user = await _dbContext.Users
+                .SingleOrDefaultAsync(u => u.UsernameFer == credentials.Username.Trim());
+
+            if (user is null)
+            {
+                throw new ArgumentException("Wrong User or Password.");
+            }
+
+            var passwordHasher = new HashArgon2();
+            if (!passwordHasher.CompareHash(credentials.Password, user.Password))
+            {
+                throw new ArgumentException("Wrong User or Password.");
+            }
         }
 
         IConfigurationSection jwtSettings = _config.GetSection("Jwt");
@@ -29,9 +50,15 @@ public class AuthService
         SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         SigningCredentials signCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
+        var userId = _dbContext is not null
+            ? (await _dbContext.Users.SingleOrDefaultAsync(u => u.UsernameFer == credentials.Username.Trim()))?.Id
+            : null;
+
         var claims = new[]
         {
             new Claim(ClaimTypes.Name, credentials.Username),
+            new Claim(ClaimTypes.NameIdentifier, userId?.ToString() ?? "0"),
+            new Claim(ClaimTypes.Email, credentials.Username),
             new Claim(ClaimTypes.Role, "User")
         };
 

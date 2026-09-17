@@ -3,7 +3,7 @@ using Isopoh.Cryptography.Argon2;
 
 namespace PasswordVault.Common.Services;
 
-class HashArgon2 : IHash
+public class HashArgon2 : IHash
 {
     public string GetHash(string plainText)
     {
