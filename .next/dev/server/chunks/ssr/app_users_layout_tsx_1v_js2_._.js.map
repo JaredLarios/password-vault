@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/angie/Documents/wdd499_senior_project/password-vault/app/users/layout.tsx"],"sourcesContent":["import React from \"react\";\r\n\r\nexport default function UsersLayout({ children }: { children: React.ReactNode }) {\r\n  return (\r\n    <div className=\"px-6 py-8\">\r\n      <h1 className=\"text-4xl font-bold mb-6\">User Management</h1>\r\n\r\n      {/* Section Navigation */}\r\n      <nav className=\"mb-8 flex gap-4 text-blue-600\">\r\n        <a href=\"/users\" className=\"hover:underline\">All Users</a>\r\n        <a href=\"/users/new\" className=\"hover:underline\">Create User</a>\r\n      </nav>\r\n\r\n      {/* Page Content */}\r\n      <div className=\"bg-white p-6 rounded-lg shadow\">\r\n        {children}\r\n      </div>\r\n    </div>\r\n  );\r\n}"],"names":["UsersLayout","children","className","href"],"mappings":";;;;;;AAEe,SAASA,YAAY,EAAEC,QAAQ,EAAiC;IAC7E,qBACE,8OAAC;QAAIC,WAAU;;0BACb,8OAAC;gBAAGA,WAAU;0BAA0B;;;;;;0BAGxC,8OAAC;gBAAIA,WAAU;;kCACb,8OAAC;wBAAEC,MAAK;wBAASD,WAAU;kCAAkB;;;;;;kCAC7C,8OAAC;wBAAEC,MAAK;wBAAaD,WAAU;kCAAkB;;;;;;;;;;;;0BAInD,8OAAC;gBAAIA,WAAU;0BACZD;;;;;;;;;;;;AAIT"}}]
+}

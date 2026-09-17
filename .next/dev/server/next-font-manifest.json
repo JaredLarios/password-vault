@@ -1,0 +1,13 @@
+{
+  "app": {
+    "[project]/app/page": [
+      "static/media/b6e5b626dbef0d0e-s.p.2yypufy_l0jqm.woff2"
+    ],
+    "[project]/app/users/new/page": [
+      "static/media/b6e5b626dbef0d0e-s.p.2yypufy_l0jqm.woff2"
+    ]
+  },
+  "appUsingSizeAdjust": true,
+  "pages": {},
+  "pagesUsingSizeAdjust": false
+}

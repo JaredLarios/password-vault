@@ -1,0 +1,236 @@
+(globalThis["TURBOPACK"] || (globalThis["TURBOPACK"] = [])).push([typeof document === "object" ? document.currentScript : undefined,
+"[project]/components/forms/CreateUserForm.tsx [app-client] (ecmascript)", ((__turbopack_context__) => {
+"use strict";
+
+__turbopack_context__.s([
+    "default",
+    ()=>CreateUserForm
+]);
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$validations$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/validations.ts [app-client] (ecmascript)");
+(()=>{
+    const e = new Error("Cannot find module '@/lib/'");
+    e.code = 'MODULE_NOT_FOUND';
+    throw e;
+})();
+;
+var _s = __turbopack_context__.k.signature();
+"use client";
+;
+;
+;
+function CreateUserForm() {
+    _s();
+    const [formData, setFormData] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])({
+        username: "",
+        email: "",
+        password: "",
+        confirmPassword: ""
+    });
+    const [errors, setErrors] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])({});
+    const [success, setSuccess] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])("");
+    function handleChange(e) {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        });
+    }
+    async function handleSubmit(e) {
+        e.preventDefault();
+        const validationErrors = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$validations$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["validateUserForm"])(formData);
+        setErrors(validationErrors);
+        if (Object.keys(validationErrors).length > 0) return;
+        try {
+            await createUser(formData);
+            setSuccess("User created successfully!");
+        } catch (err) {
+            setErrors({
+                api: "Failed to create user. Try again."
+            });
+        }
+    }
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("form", {
+        className: "create-user-form",
+        onSubmit: handleSubmit,
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+                children: "Create New User"
+            }, void 0, false, {
+                fileName: "[project]/components/forms/CreateUserForm.tsx",
+                lineNumber: 40,
+                columnNumber: 7
+            }, this),
+            success && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                className: "success",
+                children: success
+            }, void 0, false, {
+                fileName: "[project]/components/forms/CreateUserForm.tsx",
+                lineNumber: 42,
+                columnNumber: 19
+            }, this),
+            errors.api && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                className: "error",
+                children: errors.api
+            }, void 0, false, {
+                fileName: "[project]/components/forms/CreateUserForm.tsx",
+                lineNumber: 43,
+                columnNumber: 22
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                children: "Username"
+            }, void 0, false, {
+                fileName: "[project]/components/forms/CreateUserForm.tsx",
+                lineNumber: 45,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                name: "username",
+                value: formData.username,
+                onChange: handleChange
+            }, void 0, false, {
+                fileName: "[project]/components/forms/CreateUserForm.tsx",
+                lineNumber: 46,
+                columnNumber: 7
+            }, this),
+            errors.username && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                className: "error",
+                children: errors.username
+            }, void 0, false, {
+                fileName: "[project]/components/forms/CreateUserForm.tsx",
+                lineNumber: 51,
+                columnNumber: 27
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                children: "Email"
+            }, void 0, false, {
+                fileName: "[project]/components/forms/CreateUserForm.tsx",
+                lineNumber: 53,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                name: "email",
+                value: formData.email,
+                onChange: handleChange
+            }, void 0, false, {
+                fileName: "[project]/components/forms/CreateUserForm.tsx",
+                lineNumber: 54,
+                columnNumber: 7
+            }, this),
+            errors.email && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                className: "error",
+                children: errors.email
+            }, void 0, false, {
+                fileName: "[project]/components/forms/CreateUserForm.tsx",
+                lineNumber: 59,
+                columnNumber: 24
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                children: "Password"
+            }, void 0, false, {
+                fileName: "[project]/components/forms/CreateUserForm.tsx",
+                lineNumber: 61,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                type: "password",
+                name: "password",
+                value: formData.password,
+                onChange: handleChange
+            }, void 0, false, {
+                fileName: "[project]/components/forms/CreateUserForm.tsx",
+                lineNumber: 62,
+                columnNumber: 7
+            }, this),
+            errors.password && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                className: "error",
+                children: errors.password
+            }, void 0, false, {
+                fileName: "[project]/components/forms/CreateUserForm.tsx",
+                lineNumber: 68,
+                columnNumber: 27
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                children: "Confirm Password"
+            }, void 0, false, {
+                fileName: "[project]/components/forms/CreateUserForm.tsx",
+                lineNumber: 70,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                type: "password",
+                name: "confirmPassword",
+                value: formData.confirmPassword,
+                onChange: handleChange
+            }, void 0, false, {
+                fileName: "[project]/components/forms/CreateUserForm.tsx",
+                lineNumber: 71,
+                columnNumber: 7
+            }, this),
+            errors.confirmPassword && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                className: "error",
+                children: errors.confirmPassword
+            }, void 0, false, {
+                fileName: "[project]/components/forms/CreateUserForm.tsx",
+                lineNumber: 77,
+                columnNumber: 34
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                type: "submit",
+                children: "Create User"
+            }, void 0, false, {
+                fileName: "[project]/components/forms/CreateUserForm.tsx",
+                lineNumber: 79,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/components/forms/CreateUserForm.tsx",
+        lineNumber: 39,
+        columnNumber: 5
+    }, this);
+}
+_s(CreateUserForm, "ghdgLw9EDeE5UcjLVJ7s94enBVY=");
+_c = CreateUserForm;
+var _c;
+__turbopack_context__.k.register(_c, "CreateUserForm");
+if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
+    __turbopack_context__.k.registerExports(__turbopack_context__.m, globalThis.$RefreshHelpers$);
+}
+}),
+"[project]/lib/validations.ts [app-client] (ecmascript)", ((__turbopack_context__) => {
+"use strict";
+
+__turbopack_context__.s([
+    "validateUserForm",
+    ()=>validateUserForm
+]);
+function validateUserForm(data) {
+    const errors = {};
+    if (!data.username || !data.username.trim()) {
+        errors.username = "Name is required";
+    }
+    if (!data.email || !data.email.trim()) {
+        errors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(data.email)) {
+        errors.email = "Email is invalid";
+    }
+    if (!data.password || !data.password.trim()) {
+        errors.password = "Password is required";
+    } else if (data.password.length < 6) {
+        errors.password = "Password must be at least 6 characters";
+    }
+    if (!data.confirmPassword || !data.confirmPassword.trim()) {
+        errors.confirmPassword = "Please confirm your password";
+    } else if (data.password !== data.confirmPassword) {
+        errors.confirmPassword = "Passwords do not match";
+    }
+    return errors;
+}
+if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
+    __turbopack_context__.k.registerExports(__turbopack_context__.m, globalThis.$RefreshHelpers$);
+}
+}),
+]);
+
+//# sourceMappingURL=_01zb401._.js.map
