@@ -15,7 +15,6 @@ public class AuthService
 {
     private readonly IConfiguration _config;
     private readonly AppDbContext _context;
-    private readonly ICrypto _crypto;
     private readonly IHash _argon2;
     private readonly IHash _sha256;
 
@@ -29,7 +28,6 @@ public class AuthService
     {
         _config = config;
         _context = context;
-        _crypto = crypto;
         _argon2 = argon2;
         _sha256 = sha256;
     }
