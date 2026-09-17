@@ -1,14 +1,14 @@
-using System.Security.Cryptography;
 using System.Text;
+using System.Security.Cryptography;
 using PasswordVault.Common.Interfaces;
 
-namespace PasswordVault.Common.Services;
+namespace PasswordVault.Common.Repositories;
 
-public class CryptoFernet : ICrypto
+public class FernetRepository : ICrypto
 {
     private string _secretKey;
 
-    public CryptoFernet(string secretKey)
+    public FernetRepository(string secretKey)
     {
         _secretKey = secretKey;
     }

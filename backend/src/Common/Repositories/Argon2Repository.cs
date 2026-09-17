@@ -1,9 +1,9 @@
 using PasswordVault.Common.Interfaces;
 using Isopoh.Cryptography.Argon2;
 
-namespace PasswordVault.Common.Services;
+namespace PasswordVault.Common.Repositories;
 
-public class HashArgon2 : IHash
+public class Argon2Repository : IHash
 {
     public string GetHash(string plainText)
     {
