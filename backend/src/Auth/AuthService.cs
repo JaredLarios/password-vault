@@ -62,6 +62,10 @@ public class AuthService
         SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         SigningCredentials signCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
+        var userId = _dbContext is not null
+            ? (await _dbContext.Users.SingleOrDefaultAsync(u => u.UsernameFer == credentials.Username.Trim()))?.Id
+            : null;
+
         var claims = new[]
         {
             new Claim(ClaimTypes.Name, userId),
