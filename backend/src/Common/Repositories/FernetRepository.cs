@@ -6,11 +6,16 @@ namespace PasswordVault.Common.Repositories;
 
 public class FernetRepository : ICrypto
 {
-    private string _secretKey;
+    private readonly string _secretKey;
 
     public FernetRepository(string secretKey)
     {
-        _secretKey = secretKey;
+        if (string.IsNullOrWhiteSpace(secretKey))
+        {
+            throw new ArgumentException("A Fernet key is required.", nameof(secretKey));
+        }
+
+        _secretKey = NormalizeKey(secretKey);
     }
 
     public string GetEncryptedText(string plainText)
@@ -21,5 +26,16 @@ public class FernetRepository : ICrypto
     public string GetDecryptedText(string encryptedText)
     {
         return Cryptography.Fernet.Decrypt(_secretKey, encryptedText);
+    }
+
+    private static string NormalizeKey(string secretKey)
+    {
+        var bytes = Encoding.UTF8.GetBytes(secretKey);
+        var keyBytes = SHA256.HashData(bytes);
+
+        return Convert.ToBase64String(keyBytes)
+            .TrimEnd('=')
+            .Replace('+', '-')
+            .Replace('/', '_');
     }
 }
