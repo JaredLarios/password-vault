@@ -1,6 +1,6 @@
 namespace PasswordVault.Common.Interfaces;
 
-interface IHash
+public interface IHash
 {
     string GetHash(string plainText);
     bool CompareHash(string plainText, string hashedText);

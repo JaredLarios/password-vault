@@ -4,7 +4,7 @@ using PasswordVault.Common.Interfaces;
 
 namespace PasswordVault.Common.Services;
 
-class HashSha256 : IHash
+public class HashSha256 : IHash
 {
     public bool CompareHash(string plainText, string hashedText)
     {
