@@ -25,12 +25,12 @@ public class AuthController : ControllerBase
             (string tokenString, CookieOptions cookieOptions) = await _authService.GetAuthTokenAsync(credentials);
 
             Response.Cookies.Append("auth_token", tokenString, cookieOptions);
-            
+
             return Ok(new { message = "Logged in successfully" });
         }
         catch (ArgumentException ex)
         {
-            return BadRequest( new { message = ex.Message });
+            return BadRequest(new { message = ex.Message });
         }
         catch (Exception)
         {

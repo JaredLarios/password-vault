@@ -1,0 +1,26 @@
+using System.Security.Cryptography;
+using System.Text;
+using PasswordVault.Common.Interfaces;
+
+namespace PasswordVault.Common.Services;
+
+class HashSha1 : IHash
+{
+    public bool CompareHash(string plainText, string hashedText)
+    {
+        byte[] hashedTextBytes = Encoding.UTF8.GetBytes(hashedText);
+        byte[] hashBytes = Encoding.UTF8.GetBytes(
+            GetHash(plainText)
+        );
+        return CryptographicOperations.FixedTimeEquals(hashBytes, hashedTextBytes);
+    }
+
+    public string GetHash(string plainText)
+    {
+        byte[] hashBytes = SHA1.HashData(
+            Encoding.UTF8.GetBytes(plainText)
+        );
+
+        return Convert.ToHexStringLower(hashBytes);
+    }
+}

@@ -3,12 +3,21 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using PasswordVault.Auth;
 using dotenv.net;
+using Microsoft.EntityFrameworkCore;
+using PasswordVault.Common.Database;
 
 DotEnv.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
+string dbConnectionString = builder.Configuration["DB_URI"]
+    ?? throw new InvalidOperationException("JWT_SECRET_KEY is not configured.");
+
 // Add services to the container.
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(dbConnectionString)
+);
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
