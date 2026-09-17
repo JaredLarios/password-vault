@@ -5,6 +5,7 @@ using PasswordVault.Auth;
 using dotenv.net;
 using Microsoft.EntityFrameworkCore;
 using PasswordVault.Common.Database;
+using PasswordVault.Users;
 
 DotEnv.Load();
 
@@ -58,6 +59,7 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<UserService>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -78,6 +80,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

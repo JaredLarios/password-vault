@@ -4,13 +4,18 @@ using PasswordVault.Common.Interfaces;
 
 namespace PasswordVault.Common.Services;
 
-class CryptoFernet : ICrypto
+public class CryptoFernet : ICrypto
 {
-    private string _secretKey;
+    private readonly string _secretKey;
 
     public CryptoFernet(string secretKey)
     {
-        _secretKey = secretKey;
+        if (string.IsNullOrWhiteSpace(secretKey))
+        {
+            throw new ArgumentException("A Fernet key is required.", nameof(secretKey));
+        }
+
+        _secretKey = NormalizeKey(secretKey);
     }
 
     public string GetEncryptedText(string plainText)
@@ -21,5 +26,16 @@ class CryptoFernet : ICrypto
     public string GetDecryptedText(string encryptedText)
     {
         return Cryptography.Fernet.Decrypt(_secretKey, encryptedText);
+    }
+
+    private static string NormalizeKey(string secretKey)
+    {
+        var bytes = Encoding.UTF8.GetBytes(secretKey);
+        var keyBytes = SHA256.HashData(bytes);
+
+        return Convert.ToBase64String(keyBytes)
+            .TrimEnd('=')
+            .Replace('+', '-')
+            .Replace('/', '_');
     }
 }
