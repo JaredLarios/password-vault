@@ -23,7 +23,6 @@ public class AuthController : ControllerBase
         try
         {
             (string tokenString, CookieOptions cookieOptions) = await _authService.GetAuthTokenAsync(credentials);
-
             Response.Cookies.Append("auth_token", tokenString, cookieOptions);
 
             return Ok(new { message = "Logged in successfully" });

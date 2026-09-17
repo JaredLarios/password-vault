@@ -6,7 +6,8 @@ using dotenv.net;
 using Microsoft.EntityFrameworkCore;
 using PasswordVault.Common.Database;
 using PasswordVault.Common.Interfaces;
-using PasswordVault.Common.Services;
+using PasswordVault.Common.Repositories;
+
 
 DotEnv.Load();
 
@@ -70,23 +71,23 @@ builder.Services.AddControllers();
 
 builder.Services.AddKeyedSingleton<IHash>(
     "sha256",
-    new HashSha256());
+    new Sha256Repository());
 
 builder.Services.AddKeyedSingleton<IHash>(
     "sha1",
-    new HashSha1());
+    new Sha1Repository());
 
 builder.Services.AddKeyedSingleton<IHash>(
     "argon2",
-    new HashArgon2());
+    new Argon2Repository());
 
 builder.Services.AddKeyedSingleton<ICrypto>(
     "middleware",
-    new CryptoFernet(middlewareKey));
+    new FernetRepository(middlewareKey));
 
 builder.Services.AddKeyedSingleton<ICrypto>(
     "services",
-    new CryptoFernet(cryptoKey));
+    new FernetRepository(cryptoKey));
 
 builder.Services.AddScoped<AuthService>();
 
