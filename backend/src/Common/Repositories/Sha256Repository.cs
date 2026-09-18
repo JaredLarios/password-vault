@@ -2,9 +2,9 @@ using System.Security.Cryptography;
 using System.Text;
 using PasswordVault.Common.Interfaces;
 
-namespace PasswordVault.Common.Services;
+namespace PasswordVault.Common.Repositories;
 
-class HashSha256 : IHash
+public class Sha256Repository : IHash
 {
     public bool CompareHash(string plainText, string hashedText)
     {

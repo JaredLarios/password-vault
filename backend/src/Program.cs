@@ -5,6 +5,9 @@ using PasswordVault.Auth;
 using dotenv.net;
 using Microsoft.EntityFrameworkCore;
 using PasswordVault.Common.Database;
+using PasswordVault.Common.Interfaces;
+using PasswordVault.Common.Repositories;
+
 
 DotEnv.Load();
 
@@ -12,6 +15,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 string dbConnectionString = builder.Configuration["DB_URI"]
     ?? throw new InvalidOperationException("JWT_SECRET_KEY is not configured.");
+
+string cryptoKey = builder.Configuration["CRYPTO_DB_SECRET_KEY"]
+    ?? throw new InvalidOperationException(
+        "CRYPTO_DB_SECRET_KEY is not configured.");
+
+string middlewareKey = builder.Configuration["CRYPTO_MIDDLEWARE_SECRET_KEY"]
+    ?? throw new InvalidOperationException(
+        "CRYPTO_MIDDLEWARE_SECRET_KEY is not configured.");
 
 // Add services to the container.
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -57,6 +68,27 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
+
+builder.Services.AddKeyedSingleton<IHash>(
+    "sha256",
+    new Sha256Repository());
+
+builder.Services.AddKeyedSingleton<IHash>(
+    "sha1",
+    new Sha1Repository());
+
+builder.Services.AddKeyedSingleton<IHash>(
+    "argon2",
+    new Argon2Repository());
+
+builder.Services.AddKeyedSingleton<ICrypto>(
+    "middleware",
+    new FernetRepository(middlewareKey));
+
+builder.Services.AddKeyedSingleton<ICrypto>(
+    "services",
+    new FernetRepository(cryptoKey));
+
 builder.Services.AddScoped<AuthService>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
