@@ -1,11 +1,10 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PasswordVault.Auth;
 using PasswordVault.Common.Database;
 using PasswordVault.Common.Models;
-using PasswordVault.Common.Services;
+using PasswordVault.Common.Repositories;
 using PasswordVault.Users;
 
 namespace PasswordVaultAPI.Tests;
@@ -20,21 +19,19 @@ public class FabianFeatureTests
             .Options;
 
         using var context = new AppDbContext(options);
-        var service = new UserService(context, new HashArgon2(), new CryptoFernet("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="));
+        var service = new UserService(context, new FernetRepository("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="), new Argon2Repository(), new Sha256Repository());
 
-        var result = await service.CreateUserAsync(new CreateUserRequest
+        var result = await service.CreateUserAsync(new NewUserDTO
         {
-            FirstName = "Fabian",
+            Name = "Fabian",
             LastName = "Betancourt",
             Username = "fabian@example.com",
             Password = "Password123!"
         });
 
         Assert.NotNull(result);
-        Assert.Equal("fabian@example.com", result.UsernameFer);
-        Assert.NotEqual("Password123!", result.Password);
-        Assert.True(result.is_temporal);
-        Assert.NotEqual(Guid.Empty, result.Uuid);
+        Assert.Equal("User created successfully", result.Message);
+        Assert.NotEqual(Guid.Empty, result.UserId);
         Assert.Equal(1, await context.Users.CountAsync());
     }
 
@@ -46,20 +43,20 @@ public class FabianFeatureTests
             .Options;
 
         using var context = new AppDbContext(options);
-        var service = new UserService(context, new HashArgon2(), new CryptoFernet("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="));
+        var service = new UserService(context, new FernetRepository("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="), new Argon2Repository(), new Sha256Repository());
 
-        await service.CreateUserAsync(new CreateUserRequest
+        await service.CreateUserAsync(new NewUserDTO
         {
-            FirstName = "Fabian",
+            Name = "Fabian",
             LastName = "Betancourt",
             Username = "fabian@example.com",
             Password = "Password123!"
         });
 
         var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
-            service.CreateUserAsync(new CreateUserRequest
+            service.CreateUserAsync(new NewUserDTO
             {
-                FirstName = "Fabian",
+                Name = "Fabian",
                 LastName = "Betancourt",
                 Username = "fabian@example.com",
                 Password = "Password123!"
@@ -88,14 +85,14 @@ public class FabianFeatureTests
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
-        var service = new UserService(context, new HashArgon2(), new CryptoFernet("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="));
-        var result = await service.GetCurrentUserAsync(user.Id);
+        var crypto = new FernetRepository("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=");
+        var service = new UserService(context, crypto, new Argon2Repository(), new Sha256Repository());
+        var result = await service.GetCurrentUserAsync(user.Uuid);
 
         Assert.NotNull(result);
         Assert.Equal("fabian@example.com", result!.Username);
-        Assert.Equal("Fabian", result.FirstName);
+        Assert.Equal("Fabian", result.Name);
         Assert.Equal("Betancourt", result.LastName);
-        Assert.Null(result.Password);
     }
 
     [Fact]
@@ -106,7 +103,7 @@ public class FabianFeatureTests
             .Options;
 
         using var context = new AppDbContext(options);
-        var service = new UserService(context, new HashArgon2(), new CryptoFernet("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="));
+        var service = new UserService(context, new FernetRepository("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="), new Argon2Repository(), new Sha256Repository());
         var controller = new UserController(service);
 
         var httpContext = new DefaultHttpContext();
@@ -137,7 +134,7 @@ public class FabianFeatureTests
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
-        var service = new UserService(context, new HashArgon2(), new CryptoFernet("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="));
+        var service = new UserService(context, new FernetRepository("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="), new Argon2Repository(), new Sha256Repository());
         var controller = new UserController(service);
 
         var httpContext = new DefaultHttpContext();
