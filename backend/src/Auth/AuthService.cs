@@ -1,6 +1,4 @@
 using System.IdentityModel.Tokens.Jwt;
-using System.Runtime.InteropServices.Marshalling;
-using System.Runtime.Intrinsics.Arm;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
@@ -21,7 +19,6 @@ public class AuthService
     public AuthService(
         IConfiguration config,
         AppDbContext context,
-        [FromKeyedServices("services")] ICrypto crypto,
         [FromKeyedServices("argon2")] IHash argon2,
         [FromKeyedServices("sha256")] IHash sha256
     )
@@ -32,19 +29,24 @@ public class AuthService
         _sha256 = sha256;
     }
 
-    private async Task<UserModel?> GetUserByUsernameSha(string usernameSha)
+    private async Task<UserModel?> GetUserByUsernameShaAsync(string usernameSha)
     {
         return await _context
             .Users
-            .Where(user => user.UsernameSha == usernameSha)
+            .Where(user => user.UsernameSha == usernameSha && user.isActive)
             .FirstOrDefaultAsync();
     }
 
     public async Task<(string Token, CookieOptions CookieOptions)> GetAuthTokenAsync(AuthDTO credentials)
     {
+        if (string.IsNullOrWhiteSpace(credentials.Username) || string.IsNullOrWhiteSpace(credentials.Password))
+        {
+            throw new ArgumentException("Wrong User or Password.");
+        }
+
         string usernameSha = _sha256.GetHash(credentials.Username);
 
-        UserModel? user = await GetUserByUsernameSha(usernameSha);
+        UserModel? user = await GetUserByUsernameShaAsync(usernameSha);
         if (user == null) throw new ArgumentException("Bad Username or Password");
 
         bool isRightPassword = _argon2.CompareHash(credentials.Password, user.Password);

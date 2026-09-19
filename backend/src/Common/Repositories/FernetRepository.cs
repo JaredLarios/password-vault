@@ -6,7 +6,7 @@ namespace PasswordVault.Common.Repositories;
 
 public class FernetRepository : ICrypto
 {
-    private string _secretKey;
+    private readonly string _secretKey;
 
     public FernetRepository(string secretKey)
     {

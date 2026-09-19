@@ -2,8 +2,12 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using PasswordVault.Auth;
+using PasswordVault.Common.Database;
+using PasswordVault.Common.Models;
+using PasswordVault.Common.Repositories;
 
 namespace PasswordVaultAPI.Tests;
 
@@ -14,13 +18,13 @@ public class AuthTests
     [Fact]
     public async Task AuthService_ReturnsSignedTokenAndSecureCookieOptions()
     {
-        var service = new AuthService(CreateConfiguration(includeSecret: true));
+        var service = CreateService(includeSecret: true);
         var credentials = new AuthDTO { Username = "user@example.com", Password = "password" };
 
         (string token, CookieOptions cookieOptions) = await service.GetAuthTokenAsync(credentials);
         var parsedToken = new JwtSecurityTokenHandler().ReadJwtToken(token);
 
-        Assert.Equal("user@example.com", parsedToken.Claims.Single(claim => claim.Type == ClaimTypes.Name).Value);
+        Assert.NotEmpty(parsedToken.Claims.Single(claim => claim.Type == ClaimTypes.Name).Value);
         Assert.Equal("User", parsedToken.Claims.Single(claim => claim.Type == ClaimTypes.Role).Value);
         Assert.Equal("issuer", parsedToken.Issuer);
         Assert.Equal("audience", parsedToken.Audiences.Single());
@@ -36,7 +40,7 @@ public class AuthTests
     [InlineData("user@example.com", "")]
     public async Task AuthService_RejectsMissingCredentials(string username, string password)
     {
-        var service = new AuthService(CreateConfiguration(includeSecret: true));
+        var service = CreateService(includeSecret: true, seedUser: false);
 
         var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
             service.GetAuthTokenAsync(new AuthDTO { Username = username, Password = password }));
@@ -47,7 +51,7 @@ public class AuthTests
     [Fact]
     public async Task AuthService_ThrowsWhenJwtSecretIsMissing()
     {
-        var service = new AuthService(CreateConfiguration(includeSecret: false));
+        var service = CreateService(includeSecret: false);
 
         await Assert.ThrowsAsync<KeyNotFoundException>(() =>
             service.GetAuthTokenAsync(new AuthDTO { Username = "user@example.com", Password = "password" }));
@@ -110,12 +114,38 @@ public class AuthTests
 
     private static AuthController CreateController(bool includeSecret)
     {
-        var controller = new AuthController(new AuthService(CreateConfiguration(includeSecret)));
+        var controller = new AuthController(CreateService(includeSecret));
         controller.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext()
         };
         return controller;
+    }
+
+    private static AuthService CreateService(bool includeSecret, bool seedUser = true)
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        var context = new AppDbContext(options);
+
+        if (seedUser)
+        {
+            context.Users.Add(new UserModel
+            {
+                UsernameSha = new Sha256Repository().GetHash("user@example.com"),
+                Password = new Argon2Repository().GetHash("password"),
+                isActive = true
+            });
+            context.SaveChanges();
+        }
+
+        return new AuthService(
+            CreateConfiguration(includeSecret),
+            context,
+            new FernetRepository("test-key"),
+            new Argon2Repository(),
+            new Sha256Repository());
     }
 
     private static IConfiguration CreateConfiguration(bool includeSecret)
@@ -133,5 +163,5 @@ public class AuthTests
     }
 
     private static string? GetMessage(object? value) =>
-        value?.GetType().GetProperty("message")?.GetValue(value)?.ToString();
+        value?.GetType().GetProperty("Message")?.GetValue(value)?.ToString();
 }

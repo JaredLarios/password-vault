@@ -1,8 +1,4 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 
 namespace PasswordVault.Auth;
 
@@ -25,17 +21,20 @@ public class AuthController : ControllerBase
             (string tokenString, CookieOptions cookieOptions) = await _authService.GetAuthTokenAsync(credentials);
             Response.Cookies.Append("auth_token", tokenString, cookieOptions);
 
-            return Ok(new { message = "Logged in successfully" });
+            return Ok(new AuthMessageResponseDTO
+            {
+                Message = "Logged in successfully"
+            });
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(new { message = ex.Message });
+            return BadRequest(new AuthMessageResponseDTO { Message = ex.Message });
         }
         catch (Exception)
         {
-            return StatusCode(500, new
+            return StatusCode(500, new AuthMessageResponseDTO
             {
-                message = "An unexpected error occurred."
+                Message = "An unexpected error occurred."
             });
         }
     }
@@ -44,6 +43,9 @@ public class AuthController : ControllerBase
     public IActionResult logout()
     {
         Response.Cookies.Delete("auth_token");
-        return Ok(new { message = "Logged out successfully" });
+        return Ok(new AuthMessageResponseDTO
+        {
+            Message = "Logged out successfully"
+        });
     }
 }

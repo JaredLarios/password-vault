@@ -1,13 +1,14 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using PasswordVault.Auth;
 using dotenv.net;
 using Microsoft.EntityFrameworkCore;
+
+using PasswordVault.Auth;
+using PasswordVault.Users;
 using PasswordVault.Common.Database;
 using PasswordVault.Common.Interfaces;
 using PasswordVault.Common.Repositories;
-
 
 DotEnv.Load();
 
@@ -32,7 +33,8 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy
-                .WithOrigins(jwtSettings["Audience"])
+                .WithOrigins(jwtSettings["Audience"]
+                    ?? throw new InvalidOperationException("JWT audience is not configured."))
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();
@@ -103,6 +105,7 @@ builder.Services.AddKeyedSingleton<ICrypto>(
     new FernetRepository(cryptoKey));
 
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<UserService>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -124,7 +127,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors();
-app.UseAuthorization();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
