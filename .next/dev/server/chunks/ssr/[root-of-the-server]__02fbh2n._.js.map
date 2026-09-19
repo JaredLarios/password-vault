@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 13, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/angie/Documents/wdd499_senior_project/password-vault/app/favicon.ico.mjs%20(structured%20image%20object)"],"sourcesContent":["import src from \"IMAGE\";\nexport default { src, width: 256, height: 256 }\n"],"names":["src","width","height"],"mappings":";;;;AAAA;;uCACe;IAAEA,KAAAA,mIAAG;IAAEC,OAAO;IAAKC,QAAQ;AAAI"}},
-    {"offset": {"line": 28, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/angie/Documents/wdd499_senior_project/password-vault/app/page.tsx"],"sourcesContent":["\n// app/users/page.tsx\n\nexport default function UsersPage() {\n  return (\n    <div>\n      <h2 className=\"text-2xl font-semibold mb-4\">All Users</h2>\n\n      <p className=\"text\">User list will appear here once the backend is connected.</p>\n    </div>\n  );\n}\n"],"names":["UsersPage","className"],"mappings":"AACA,qBAAqB;;;;;;;AAEN,SAASA;IACtB,qBACE,8OAAC;;0BACC,8OAAC;gBAAGC,WAAU;0BAA8B;;;;;;0BAE5C,8OAAC;gBAAEA,WAAU;0BAAO;;;;;;;;;;;;AAG1B"}}]
-}
