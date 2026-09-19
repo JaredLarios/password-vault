@@ -9,7 +9,6 @@ using PasswordVault.Users;
 using PasswordVault.Common.Database;
 using PasswordVault.Common.Interfaces;
 using PasswordVault.Common.Repositories;
-using PasswordVault.Users;
 
 DotEnv.Load();
 

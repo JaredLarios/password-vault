@@ -49,8 +49,9 @@ public class UserController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
-        catch (Exception)
+        catch (Exception exp)
         {
+            Console.WriteLine(exp);
             return StatusCode(500, new { message = "An unexpected error occurred." });
         }
     }
