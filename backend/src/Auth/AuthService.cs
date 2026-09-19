@@ -1,6 +1,4 @@
 using System.IdentityModel.Tokens.Jwt;
-using System.Runtime.InteropServices.Marshalling;
-using System.Runtime.Intrinsics.Arm;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
@@ -41,6 +39,11 @@ public class AuthService
 
     public async Task<(string Token, CookieOptions CookieOptions)> GetAuthTokenAsync(AuthDTO credentials)
     {
+        if (string.IsNullOrWhiteSpace(credentials.Username) || string.IsNullOrWhiteSpace(credentials.Password))
+        {
+            throw new ArgumentException("Wrong User or Password.");
+        }
+
         string usernameSha = _sha256.GetHash(credentials.Username);
 
         UserModel? user = await GetUserByUsernameShaAsync(usernameSha);

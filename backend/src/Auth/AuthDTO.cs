@@ -12,4 +12,9 @@ public class AuthDTO
     [Required]
     [StringLength(15)]
     public string Password { get; set; } = string.Empty;
-};
+}
+
+public class AuthMessageResponseDTO
+{
+    public string Message { get; set; } = string.Empty;
+}

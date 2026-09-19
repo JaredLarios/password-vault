@@ -9,7 +9,6 @@ using PasswordVault.Users;
 using PasswordVault.Common.Database;
 using PasswordVault.Common.Interfaces;
 using PasswordVault.Common.Repositories;
-
 using PasswordVault.Users;
 
 DotEnv.Load();
@@ -27,7 +26,22 @@ string middlewareKey = builder.Configuration["CRYPTO_MIDDLEWARE_SECRET_KEY"]
     ?? throw new InvalidOperationException(
         "CRYPTO_MIDDLEWARE_SECRET_KEY is not configured.");
 
+IConfigurationSection jwtSettings = builder.Configuration.GetSection("JWT");
+
 // Add services to the container.
+builder.Services.AddCors(options =>
+    options.AddDefaultPolicy(
+        policy =>
+        {
+            policy
+                .WithOrigins(jwtSettings["Audience"]
+                    ?? throw new InvalidOperationException("JWT audience is not configured."))
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        })
+);
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(dbConnectionString)
 );
@@ -39,7 +53,6 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    IConfigurationSection jwtSettings = builder.Configuration.GetSection("JWT");
     string secretKey = builder.Configuration["JWT_SECRET_KEY"]
         ?? throw new InvalidOperationException("JWT_SECRET_KEY is not configured.");
 
@@ -114,6 +127,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 

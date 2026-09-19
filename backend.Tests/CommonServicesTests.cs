@@ -1,4 +1,4 @@
-using PasswordVault.Common.Services;
+using PasswordVault.Common.Repositories;
 
 namespace PasswordVaultAPI.Tests;
 
@@ -7,7 +7,7 @@ public class CommonServicesTests
     [Fact]
     public void Sha1Hash_IsDeterministicAndCanBeCompared()
     {
-        var service = new HashSha1();
+        var service = new Sha1Repository();
 
         string hash = service.GetHash("password");
 
@@ -20,7 +20,7 @@ public class CommonServicesTests
     [Fact]
     public void Sha256Hash_IsDeterministicAndCanBeCompared()
     {
-        var service = new HashSha256();
+        var service = new Sha256Repository();
 
         string hash = service.GetHash("password");
 
@@ -33,7 +33,7 @@ public class CommonServicesTests
     [Fact]
     public void Argon2Hash_CanBeGeneratedAndVerified()
     {
-        var service = new HashArgon2();
+        var service = new Argon2Repository();
 
         string hash = service.GetHash("password");
 
@@ -45,7 +45,7 @@ public class CommonServicesTests
     [Fact]
     public void Fernet_CanEncryptAndDecryptText()
     {
-        var service = new CryptoFernet("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=");
+        var service = new FernetRepository("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=");
 
         string encrypted = service.GetEncryptedText("secret text");
 
