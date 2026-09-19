@@ -19,7 +19,7 @@ public class ModelsAndDatabaseTests
 
         Assert.False(user.isActive);
         Assert.Equal(1, user.Id);
-        Assert.True(user.is_temporal);
+        Assert.True(user.isTemporal);
         Assert.NotEqual(Guid.Empty, user.Uuid);
         Assert.NotNull(user.Websites);
         Assert.Equal(string.Empty, user.UsernameFer);

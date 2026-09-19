@@ -8,6 +8,7 @@ using PasswordVault.Auth;
 using PasswordVault.Users;
 using PasswordVault.Common.Database;
 using PasswordVault.Common.Interfaces;
+using PasswordVault.Common.Middleware;
 using PasswordVault.Common.Repositories;
 
 DotEnv.Load();
@@ -127,6 +128,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors();
+app.UseMiddleware<FieldEncryptionMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 

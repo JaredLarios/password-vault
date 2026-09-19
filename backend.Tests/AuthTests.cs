@@ -143,7 +143,6 @@ public class AuthTests
         return new AuthService(
             CreateConfiguration(includeSecret),
             context,
-            new FernetRepository("test-key"),
             new Argon2Repository(),
             new Sha256Repository());
     }

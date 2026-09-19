@@ -19,7 +19,7 @@ As a user, I want to create an account, log in securely, log out, and view my pr
 ```json
 {
   "username": "fabian@example.com",
-  "firstName": "Fabian",
+  "name": "Fabian",
   "lastName": "Betancourt",
   "password": "Password123!"
 }
@@ -96,7 +96,7 @@ The `auth_token` cookie is deleted.
 
 ### Endpoint
 
-- URL: `/User/profile`
+- URL: `/User/me`
 - Method: `GET`
 - Success: `200`
 - Missing or invalid authentication: `401`
@@ -108,9 +108,27 @@ The request does not have a body. The authenticated JWT cookie is required.
 ```json
 {
   "username": "fabian@example.com",
-  "firstName": "Fabian",
+  "name": "Fabian",
   "lastName": "Betancourt"
 }
 ```
 
 The password and internal password hash are never included in the response.
+
+## Encrypted Payload Middleware
+
+The API supports encrypted JSON fields through the `FieldEncryptionMiddleware`.
+To use it, send the following header with a JSON request:
+
+```http
+X-Encrypted-Payload: true
+```
+
+When the header is enabled:
+
+- Every string value in the JSON request body is decrypted before the controller receives it.
+- Every string value in a JSON response is encrypted before it is sent to the client.
+- The middleware uses `CRYPTO_MIDDLEWARE_SECRET_KEY`.
+- The same key and Fernet implementation must be used by the client to encrypt requests and decrypt responses.
+
+Requests without this header continue to use regular plaintext JSON. Passwords are still stored as Argon2 hashes and are never reversibly encrypted in the database.
