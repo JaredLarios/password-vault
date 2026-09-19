@@ -32,7 +32,8 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy
-                .WithOrigins(jwtSettings["Audience"])
+                .WithOrigins(jwtSettings["Audience"]
+                    ?? throw new InvalidOperationException("JWT audience is not configured."))
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();

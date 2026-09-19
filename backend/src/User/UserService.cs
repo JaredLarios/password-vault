@@ -1,39 +1,13 @@
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using PasswordVault.Common.Database;
 using PasswordVault.Common.Interfaces;
 using PasswordVault.Common.Models;
-using PasswordVault.Common.Services;
+using PasswordVault.Common.Repositories;
 
 namespace PasswordVault.Users;
-
-public class CreateUserRequest
-{
-    [Required]
-    [EmailAddress]
-    [StringLength(50)]
-    public string Username { get; set; } = string.Empty;
-
-    [Required]
-    [StringLength(50)]
-    public string FirstName { get; set; } = string.Empty;
-
-    [Required]
-    [StringLength(50)]
-    public string LastName { get; set; } = string.Empty;
-
-    [Required]
-    [MinLength(8)]
-    public string Password { get; set; } = string.Empty;
-}
-
-public class UserProfileResponse
-{
-    public string Username { get; set; } = string.Empty;
-    public string FirstName { get; set; } = string.Empty;
-    public string LastName { get; set; } = string.Empty;
-    public string? Password { get; set; }
-}
 
 public class UserService
 {
@@ -41,14 +15,26 @@ public class UserService
     private readonly IHash _hash;
     private readonly ICrypto _crypto;
 
-    public UserService(AppDbContext dbContext, IHash? hash = null, ICrypto? crypto = null)
+    public UserService(
+        AppDbContext dbContext,
+        [FromKeyedServices("services")] ICrypto crypto,
+        [FromKeyedServices("argon2")] IHash hash,
+        [FromKeyedServices("sha256")] IHash usernameHash)
     {
         _dbContext = dbContext;
-        _hash = hash ?? new HashArgon2();
-        _crypto = crypto ?? new CryptoFernet("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=");
+        _hash = hash;
+        _crypto = crypto;
+        _usernameHash = usernameHash;
     }
 
-    public async Task<UserModel> CreateUserAsync(CreateUserRequest request)
+    private readonly IHash _usernameHash;
+
+    public UserService(AppDbContext dbContext, IHash hash, ICrypto crypto)
+        : this(dbContext, crypto, hash, new Sha256Repository())
+    {
+    }
+
+    public async Task<UserModel> CreateUserAsync(CreateUserDTO request)
     {
         if (request is null)
         {
@@ -71,7 +57,7 @@ public class UserService
             throw new ArgumentException("Password must be at least 8 characters long.");
         }
 
-        var usernameHash = new HashSha256().GetHash(username);
+        var usernameHash = _usernameHash.GetHash(username);
         var existingUser = await _dbContext.Users
             .AnyAsync(user => user.UsernameSha == usernameHash || user.UsernameFer == username);
 
@@ -94,31 +80,34 @@ public class UserService
         _dbContext.Users.Add(user);
         await _dbContext.SaveChangesAsync();
 
-        user.UsernameFer = username;
-        user.NameFer = request.FirstName.Trim();
-        user.LastNameFer = request.LastName.Trim();
-
         return user;
     }
 
-    public async Task<UserProfileResponse?> GetCurrentUserAsync(int userId)
+    public async Task<UserProfileDTO?> GetCurrentUserAsync(Guid userUuid)
     {
         var user = await _dbContext.Users
             .AsNoTracking()
-            .FirstOrDefaultAsync(record => record.Id == userId && record.isActive);
+            .FirstOrDefaultAsync(record => record.Uuid == userUuid && record.isActive);
 
         if (user is null)
         {
             return null;
         }
 
-        return new UserProfileResponse
+        return new UserProfileDTO
         {
             Username = DecryptValue(user.UsernameFer),
             FirstName = DecryptValue(user.NameFer),
-            LastName = DecryptValue(user.LastNameFer),
-            Password = null
+            LastName = DecryptValue(user.LastNameFer)
         };
+    }
+
+    public async Task<UserProfileDTO?> GetCurrentUserAsync(ClaimsPrincipal principal)
+    {
+        var userUuidClaim = principal.FindFirstValue(ClaimTypes.Name);
+        return Guid.TryParse(userUuidClaim, out var userUuid)
+            ? await GetCurrentUserAsync(userUuid)
+            : null;
     }
 
     private string DecryptValue(string? value)

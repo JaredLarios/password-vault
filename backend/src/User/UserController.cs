@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,24 +15,27 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] CreateUserRequest request)
+    public async Task<IActionResult> Register([FromBody] CreateUserDTO request)
     {
         try
         {
             var user = await _userService.CreateUserAsync(request);
-            return Ok(new
+            return Ok(new UserCreatedResponseDTO
             {
-                message = "User created successfully",
-                userId = user.Id
+                Message = "User created successfully",
+                UserId = user.Id
             });
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(new { message = ex.Message });
+            return BadRequest(new UserMessageResponseDTO { Message = ex.Message });
         }
         catch (Exception)
         {
-            return StatusCode(500, new { message = "An unexpected error occurred." });
+            return StatusCode(500, new UserMessageResponseDTO
+            {
+                Message = "An unexpected error occurred."
+            });
         }
     }
 
@@ -41,36 +43,12 @@ public class UserController : ControllerBase
     [HttpGet("profile")]
     public async Task<IActionResult> GetProfile()
     {
-        var userId = GetCurrentUserId();
-        if (!userId.HasValue)
+        var profile = await _userService.GetCurrentUserAsync(User);
+        if (profile is null)
         {
             return Unauthorized();
         }
 
-        var profile = await _userService.GetCurrentUserAsync(userId.Value);
-        if (profile is null)
-        {
-            return NotFound(new { message = "User not found." });
-        }
-
         return Ok(profile);
-    }
-
-    private int? GetCurrentUserId()
-    {
-        if (HttpContext.Items.TryGetValue("UserId", out var item) && item is int userId)
-        {
-            return userId;
-        }
-
-        var idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? User.FindFirstValue("userId");
-
-        if (int.TryParse(idClaim, out var parsedId))
-        {
-            return parsedId;
-        }
-
-        return null;
     }
 }

@@ -40,6 +40,11 @@ public class AuthService
 
     public async Task<(string Token, CookieOptions CookieOptions)> GetAuthTokenAsync(AuthDTO credentials)
     {
+        if (string.IsNullOrWhiteSpace(credentials.Username) || string.IsNullOrWhiteSpace(credentials.Password))
+        {
+            throw new ArgumentException("Wrong User or Password.");
+        }
+
         string usernameSha = _sha256.GetHash(credentials.Username);
 
         UserModel? user = await GetUserByUsernameSha(usernameSha);
