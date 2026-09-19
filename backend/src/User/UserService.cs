@@ -1,140 +1,94 @@
 using System.ComponentModel.DataAnnotations;
+using System.Runtime.Intrinsics.Arm;
 using Microsoft.EntityFrameworkCore;
 using PasswordVault.Common.Database;
 using PasswordVault.Common.Interfaces;
 using PasswordVault.Common.Models;
-using PasswordVault.Common.Services;
 
 namespace PasswordVault.Users;
 
-public class CreateUserRequest
-{
-    [Required]
-    [EmailAddress]
-    [StringLength(50)]
-    public string Username { get; set; } = string.Empty;
-
-    [Required]
-    [StringLength(50)]
-    public string FirstName { get; set; } = string.Empty;
-
-    [Required]
-    [StringLength(50)]
-    public string LastName { get; set; } = string.Empty;
-
-    [Required]
-    [MinLength(8)]
-    public string Password { get; set; } = string.Empty;
-}
-
-public class UserProfileResponse
-{
-    public string Username { get; set; } = string.Empty;
-    public string FirstName { get; set; } = string.Empty;
-    public string LastName { get; set; } = string.Empty;
-    public string? Password { get; set; }
-}
-
 public class UserService
 {
-    private readonly AppDbContext _dbContext;
-    private readonly IHash _hash;
+    private readonly AppDbContext _context;
     private readonly ICrypto _crypto;
+    private readonly IHash _argon2;
+    private readonly IHash _sha256;
 
-    public UserService(AppDbContext dbContext, IHash? hash = null, ICrypto? crypto = null)
+    public UserService(
+        AppDbContext context,
+        [FromKeyedServices("services")] ICrypto crypto,
+        [FromKeyedServices("argon2")] IHash argon2,
+        [FromKeyedServices("sha256")] IHash sha256
+    )
     {
-        _dbContext = dbContext;
-        _hash = hash ?? new HashArgon2();
-        _crypto = crypto ?? new CryptoFernet("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=");
+        _context = context;
+        _crypto = crypto;
+        _argon2 = argon2;
+        _sha256 = sha256;
     }
 
-    public async Task<UserModel> CreateUserAsync(CreateUserRequest request)
+    private async Task<bool> ExistsUserWithUsernameShaAsync(string usernameSha)
     {
-        if (request is null)
-        {
-            throw new ArgumentNullException(nameof(request));
-        }
+        return await _context
+            .Users
+            .AnyAsync(user => user.UsernameSha == usernameSha);
+    }
 
-        var username = request.Username.Trim();
-        if (string.IsNullOrWhiteSpace(username) || !new EmailAddressAttribute().IsValid(username))
-        {
-            throw new ArgumentException("A valid email is required.");
-        }
+    private async Task<UserModel?> GetUserByUuidAsync(Guid userUuid)
+    {
+        return await _context
+            .Users
+            .Where(user => user.Uuid == userUuid && user.isActive)
+            .FirstOrDefaultAsync();
+    }
 
-        if (string.IsNullOrWhiteSpace(request.FirstName) || string.IsNullOrWhiteSpace(request.LastName))
-        {
-            throw new ArgumentException("First name and last name are required.");
-        }
+    public async Task<NewUserResponse> CreateUserAsync(NewUserDTO newUser)
+    {
+        string usernameHash = _sha256.GetHash(newUser.Username);
+        bool existingUser = await ExistsUserWithUsernameShaAsync(usernameHash);
 
-        if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 8)
-        {
-            throw new ArgumentException("Password must be at least 8 characters long.");
-        }
+        if (existingUser) throw new ArgumentException("A user with that username already exists.");
 
-        var usernameHash = new HashSha256().GetHash(username);
-        var existingUser = await _dbContext.Users
-            .AnyAsync(user => user.UsernameSha == usernameHash || user.UsernameFer == username);
-
-        if (existingUser)
+        UserModel user = new UserModel
         {
-            throw new ArgumentException("A user with that username already exists.");
-        }
-
-        var user = new UserModel
-        {
-            UsernameFer = _crypto.GetEncryptedText(username),
+            Uuid = Guid.NewGuid(),
+            UsernameFer = _crypto.GetEncryptedText(newUser.Username),
             UsernameSha = usernameHash,
-            NameFer = _crypto.GetEncryptedText(request.FirstName.Trim()),
-            LastNameFer = _crypto.GetEncryptedText(request.LastName.Trim()),
-            Password = _hash.GetHash(request.Password),
-            is_temporal = true,
-            isActive = true
+            NameFer = string.IsNullOrEmpty(newUser.Name?.Trim()) ? 
+                null : 
+                _crypto.GetEncryptedText(newUser.Name.Trim()),
+            LastNameFer = string.IsNullOrEmpty(newUser.LastName?.Trim()) ?
+                null :
+                _crypto.GetEncryptedText(newUser.LastName.Trim()),
+            Password = _argon2.GetHash(newUser.Password),
+            isTemporal = true
         };
 
-        _dbContext.Users.Add(user);
-        await _dbContext.SaveChangesAsync();
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
 
-        user.UsernameFer = username;
-        user.NameFer = request.FirstName.Trim();
-        user.LastNameFer = request.LastName.Trim();
-
-        return user;
+        return new NewUserResponse
+        {
+            Message = "User created successfully",
+            UserId = user.Uuid
+        };
     }
 
-    public async Task<UserProfileResponse?> GetCurrentUserAsync(int userId)
+    public async Task<UserProfileResponse> GetCurrentUserAsync(Guid userId)
     {
-        var user = await _dbContext.Users
-            .AsNoTracking()
-            .FirstOrDefaultAsync(record => record.Id == userId && record.isActive);
+        UserModel? user = await GetUserByUuidAsync(userId);
 
-        if (user is null)
-        {
-            return null;
-        }
+        if (user == null) throw new KeyNotFoundException("User not found");
 
         return new UserProfileResponse
         {
-            Username = DecryptValue(user.UsernameFer),
-            FirstName = DecryptValue(user.NameFer),
-            LastName = DecryptValue(user.LastNameFer),
-            Password = null
+            Username = _crypto.GetDecryptedText(user.UsernameFer),
+            Name = string.IsNullOrEmpty(user.NameFer) ?
+                null :
+                _crypto.GetDecryptedText(user.NameFer),
+            LastName = string.IsNullOrEmpty(user.LastNameFer) ?
+                null :
+                _crypto.GetDecryptedText(user.LastNameFer)
         };
-    }
-
-    private string DecryptValue(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return string.Empty;
-        }
-
-        try
-        {
-            return _crypto.GetDecryptedText(value);
-        }
-        catch
-        {
-            return value;
-        }
     }
 }

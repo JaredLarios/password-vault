@@ -6,14 +6,14 @@ namespace PasswordVault.Common.Models;
 public class BaseModel
 {
     [Column("is_active")]
-    public bool isActive { get; set; } = false;
+    public bool isActive { get; set; } = true;
 
-    [Column("created_at", TypeName = "timestamp without time zone")]
+    [Column("created_at", TypeName = "timestamp with time zone")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    [Column("updated_at", TypeName = "timestamp without time zone")]
+    [Column("updated_at", TypeName = "timestamp with time zone")]
     public DateTime? UpdatedAt { get; set; }
 
-    [Column("deleted_at", TypeName = "timestamp without time zone")]
+    [Column("deleted_at", TypeName = "timestamp with time zone")]
     public DateTime? DeletedAt { get; set; }
 }

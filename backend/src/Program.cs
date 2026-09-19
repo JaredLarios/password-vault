@@ -1,9 +1,11 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using PasswordVault.Auth;
 using dotenv.net;
 using Microsoft.EntityFrameworkCore;
+
+using PasswordVault.Auth;
+using PasswordVault.Users;
 using PasswordVault.Common.Database;
 using PasswordVault.Common.Interfaces;
 using PasswordVault.Common.Repositories;

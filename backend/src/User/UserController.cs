@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,16 +15,12 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] CreateUserRequest request)
+    public async Task<ActionResult<NewUserResponse>> Register([FromBody] NewUserDTO newUser)
     {
         try
         {
-            var user = await _userService.CreateUserAsync(request);
-            return Ok(new
-            {
-                message = "User created successfully",
-                userId = user.Id
-            });
+            NewUserResponse user = await _userService.CreateUserAsync(newUser);
+            return Ok(user);
         }
         catch (ArgumentException ex)
         {
@@ -38,39 +33,25 @@ public class UserController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("profile")]
-    public async Task<IActionResult> GetProfile()
+    [HttpGet("me")]
+    public async Task<ActionResult<UserProfileResponse>> GetProfile()
     {
-        var userId = GetCurrentUserId();
-        if (!userId.HasValue)
+        try
         {
-            return Unauthorized();
-        }
+            var userIdValue = User.Identity?.Name;
 
-        var profile = await _userService.GetCurrentUserAsync(userId.Value);
-        if (profile is null)
+            if (!Guid.TryParse(userIdValue, out var userUuid))  return Unauthorized();
+            
+            UserProfileResponse profile = await _userService.GetCurrentUserAsync(userUuid);
+            return Ok(profile);
+        }
+        catch (KeyNotFoundException ex)
         {
-            return NotFound(new { message = "User not found." });
+            return BadRequest(new { message = ex.Message });
         }
-
-        return Ok(profile);
-    }
-
-    private int? GetCurrentUserId()
-    {
-        if (HttpContext.Items.TryGetValue("UserId", out var item) && item is int userId)
+        catch (Exception)
         {
-            return userId;
+            return StatusCode(500, new { message = "An unexpected error occurred." });
         }
-
-        var idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? User.FindFirstValue("userId");
-
-        if (int.TryParse(idClaim, out var parsedId))
-        {
-            return parsedId;
-        }
-
-        return null;
     }
 }

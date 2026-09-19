@@ -29,7 +29,7 @@ public class UserModel : BaseModel
     public string Password { get; set; } = string.Empty;
 
     [Column("is_temporal")]
-    public bool is_temporal { get; set; } = true;
+    public bool isTemporal { get; set; } = true;
 
     public List<WebsiteModel> Websites { get; set; } = [];
 }
