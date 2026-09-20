@@ -17,10 +17,10 @@ export function validateUserForm(data: {
     if (!data.username || !data.username.trim()) {
         errors.username = "Name is required";
     }
-    if (!data.email || !data.email.trim()) {
-        errors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(data.email)) {
-        errors.email = "Email is invalid";
+    if (!data.username || !data.username.trim()) {
+        errors.username = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(data.username)) {
+        errors.username = "Email is invalid";
     }
     if (!data.password || !data.password.trim()) {
         errors.password = "Password is required";
@@ -35,13 +35,13 @@ export function validateUserForm(data: {
     return errors;
 }
 
-export function validateLoginForm(data: { email: string; password: string }) {
+export function validateLoginForm(data: { username: string; password: string }) {
   const errors: any = {};
 
-  if (!data.email.trim()) {
-    errors.email = "Email is required.";
-  } else if (!data.email.includes("@")) {
-    errors.email = "Valid email is required.";
+  if (!data.username.trim()) {
+    errors.username = "Email is required.";
+  } else if (!data.username.includes("@")) {
+    errors.username = "Valid email is required.";
   }
 
   if (!data.password.trim()) {

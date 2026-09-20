@@ -1,13 +1,12 @@
-export async function loginUser(loginData: any) {
-  const response = await fetch("/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(loginData)
-  });
+import { LoginDto } from "@/DTO/LoginDto";
+import api from "@/lib/axios";
 
-  if (!response.ok) {
+export async function loginUser(loginData: LoginDto) {
+  const response = await api.post("/auth/login", JSON.stringify(loginData));
+
+  if (response.status !== 200) {
     throw new Error("Login failed");
   }
 
-  return response.json();
+  return response.data;
 }

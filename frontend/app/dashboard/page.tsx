@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getCurrentUser } from "@/lib/getCurrentUser";
+import { UserResponseDto } from "@/DTO/UserDto";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<UserResponseDto|null>(null);
 
   useEffect(() => {
     async function loadUser() {
@@ -17,7 +18,7 @@ export default function DashboardPage() {
         return;
       }
 
-      setUser(data);
+      setUser(data.data);
     }
 
     loadUser();
@@ -35,8 +36,8 @@ export default function DashboardPage() {
         <h2 className="text-xl font-semibold mb-2">Your Profile</h2>
 
         <p><strong>Name:</strong> {user.name}</p>
-        <p><strong>Email:</strong> {user.email}</p>
-        <p><strong>Role:</strong> {user.role_name}</p>
+        <p><strong>LastName:</strong> {user.lastName}</p>
+        <p><strong>Email:</strong> {user.username}</p>
       </section>
 
       <section className="mt-6 bg-white shadow p-4 rounded border">
