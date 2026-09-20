@@ -3,16 +3,20 @@
 import { useState } from "react";
 import { Errors, validateUserForm } from "../validations";
 import { createUser } from "../../lib/createUser";
+import { NewUserDto } from "@/DTO/UserDto";
+import { useRouter } from "next/navigation";
 
 export default function CreateUserForm() {
-    const [formData, setFormData] = useState({
-        username: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
+  const router = useRouter();
+  const [formData, setFormData] = useState({
+      username: "",
+      name: "",
+      lastName: "",
+      password: "",
+      confirmPassword: "",
     });
 
-const [errors, setErrors] = useState<Errors>({});
+  const [errors, setErrors] = useState<Errors>({});
   const [success, setSuccess] = useState("");
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -28,8 +32,9 @@ const [errors, setErrors] = useState<Errors>({});
     if (Object.keys(validationErrors).length > 0) return;
 
     try {
-      await createUser(formData);
+      await createUser(formData as NewUserDto);
       setSuccess("User created successfully!");
+      router.replace("/login");
     } catch (err) {
       setErrors({ api: "Failed to create user. Try again." });
     }
@@ -42,21 +47,32 @@ const [errors, setErrors] = useState<Errors>({});
       {success && <p className="success">{success}</p>}
       {errors.api && <p className="error">{errors.api}</p>}
 
-      <label>Username</label>
+      <label>Name</label>
+      <input
+        name="name"
+        type="name"
+        value={formData.name}
+        onChange={handleChange}
+      />
+      {errors.name && <p className="error">{errors.name}</p>}
+
+      <label>Last Name</label>
+      <input
+        name="lastName"
+        type="lastName"
+        value={formData.lastName}
+        onChange={handleChange}
+      />
+      {errors.lastName && <p className="error">{errors.lastName}</p>}
+
+      <label>Email</label>
       <input
         name="username"
+        type="email"
         value={formData.username}
         onChange={handleChange}
       />
       {errors.username && <p className="error">{errors.username}</p>}
-
-      <label>Email</label>
-      <input
-        name="email"
-        value={formData.email}
-        onChange={handleChange}
-      />
-      {errors.email && <p className="error">{errors.email}</p>}
 
       <label>Password</label>
       <input
