@@ -9,6 +9,7 @@ using PasswordVault.Users;
 using PasswordVault.Common.Database;
 using PasswordVault.Common.Interfaces;
 using PasswordVault.Common.Repositories;
+using PasswordVault.Common.Middleware;
 
 DotEnv.Load();
 
@@ -111,6 +112,8 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+app.UseMiddleware<SecurityMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
