@@ -6,6 +6,7 @@ using PasswordVault.Common.Database;
 using PasswordVault.Common.Models;
 using PasswordVault.Common.Repositories;
 using PasswordVault.Users;
+using PasswordVault.Websites;
 
 namespace PasswordVaultAPI.Tests;
 
@@ -146,5 +147,124 @@ public class FabianFeatureTests
         var ok = Assert.IsType<OkObjectResult>(action);
         var payload = Assert.IsType<UserProfileResponse>(ok.Value);
         Assert.Equal("fabian@example.com", payload.Username);
+    }
+
+    [Fact]
+    public async Task WebsiteService_GetWebsites_ReturnsUrlsAndCredentialsForCurrentUser()
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+
+        using var context = new AppDbContext(options);
+        var crypto = new FernetRepository("MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=");
+        var user = new UserModel
+        {
+            Uuid = Guid.NewGuid(),
+            UsernameFer = crypto.GetEncryptedText("user@example.com"),
+            UsernameSha = "sha256",
+            Password = "hashed-password",
+            isActive = true
+        };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var website = new WebsiteModel
+        {
+            Uuid = Guid.NewGuid(),
+            UserId = user.Id,
+            WebsiteName = "Facebook"
+        };
+        context.Websites.Add(website);
+        context.WebsiteUrls.Add(new WebsiteUrlModel
+        {
+            WebsiteId = website.Id,
+            Url = "https://www.facebook.com"
+        });
+        context.WebsiteCredentials.Add(new WebsiteCredentialModel
+        {
+            WebsiteId = website.Id,
+            WebsiteUsername = crypto.GetEncryptedText("user@example.com"),
+            WebsitePassword = crypto.GetEncryptedText("secret-pass"),
+            WebsiteUserId = Guid.NewGuid()
+        });
+        await context.SaveChangesAsync();
+
+        var service = new WebsiteService(context, crypto);
+
+        var result = await service.GetWebsitesAsync(user.Uuid, website.Uuid);
+
+        var item = Assert.Single(result);
+        Assert.Equal("Facebook", item.WebsiteName);
+        Assert.Contains("https://www.facebook.com", item.Urls);
+        var credential = Assert.Single(item.Credentials);
+        Assert.Equal("user@example.com", credential.WebsiteUsername);
+        Assert.Equal("secret-pass", credential.WebistePassword);
+    }
+
+    [Fact]
+    public async Task WebsiteService_UpdateWebsite_UpdatesWebsiteNameAndCredentialValues()
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+
+        using var context = new AppDbContext(options);
+        var crypto = new FernetRepository("MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=");
+        var user = new UserModel
+        {
+            Uuid = Guid.NewGuid(),
+            UsernameFer = crypto.GetEncryptedText("user@example.com"),
+            UsernameSha = "sha256",
+            Password = "hashed-password",
+            isActive = true
+        };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var website = new WebsiteModel
+        {
+            Uuid = Guid.NewGuid(),
+            UserId = user.Id,
+            WebsiteName = "Old Name"
+        };
+        context.Websites.Add(website);
+        context.WebsiteUrls.Add(new WebsiteUrlModel
+        {
+            WebsiteId = website.Id,
+            Url = "https://old.example.com"
+        });
+        var credential = new WebsiteCredentialModel
+        {
+            WebsiteId = website.Id,
+            WebsiteUsername = crypto.GetEncryptedText("old@example.com"),
+            WebsitePassword = crypto.GetEncryptedText("old-pass"),
+            WebsiteUserId = Guid.NewGuid()
+        };
+        context.WebsiteCredentials.Add(credential);
+        await context.SaveChangesAsync();
+
+        var service = new WebsiteService(context, crypto);
+
+        var response = await service.UpdateWebsiteAsync(
+            user.Uuid,
+            website.Uuid,
+            new UpdateWebsiteRequest
+            {
+                WebsiteName = "New Name",
+                WebsiteUrl = "https://new.example.com",
+                WebsiteUsername = "new@example.com",
+                WebistePassword = "new-pass"
+            });
+
+        Assert.Equal("Website credentials updated successfully.", response.Message);
+
+        var updated = await context.Websites.Include(x => x.Urls).Include(x => x.Credentials)
+            .SingleAsync(x => x.Uuid == website.Uuid);
+        Assert.Equal("New Name", updated.WebsiteName);
+        Assert.Contains(updated.Urls, x => x.Url == "https://new.example.com");
+        Assert.Contains(updated.Credentials, x =>
+            crypto.GetDecryptedText(x.WebsiteUsername) == "new@example.com" &&
+            crypto.GetDecryptedText(x.WebsitePassword) == "new-pass");
     }
 }
