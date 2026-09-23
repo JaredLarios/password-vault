@@ -1,13 +1,12 @@
 import api from "@/lib/axios"
-import { AxiosResponse } from "axios";
 
 export async function createUser(data: {
   username: string;
-  email: string;
+  name: string;
+  lastName: string;
   password: string;
-  confirmPassword: string;
 }) {
-  const response: AxiosResponse<any> = await api.get("/WeatherForecast"); // Remove this code part because is a sample of connection with backend.
+  const response = await api.post("/user/register", data);
 
   if (response.status !== 200) {
     throw new Error("Failed to create user");

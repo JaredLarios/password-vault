@@ -1,19 +1,20 @@
+"use client";
+
 import { useState } from "react";
 import type React from "react";
 import { validateLoginForm, LoginErrors } from "@/lib/validations";
-import { loginUser } from "../../services/api";
-import { useRouter } from "next/router";
+import { useRouter } from 'next/navigation';
+import { loginUser } from "@/lib/loginUser";
 
 export default function LoginForm() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
-    email: "",
+    username: "",
     password: ""
   });
 
-    const [errors, setErrors] = useState<LoginErrors>({});
-    const [success, setSuccess] = useState("");
-
-
+  const [errors, setErrors] = useState<LoginErrors>({});
+  const [success, setSuccess] = useState("");
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -28,17 +29,8 @@ export default function LoginForm() {
     if (Object.keys(validationErrors).length > 0) return;
 
     try {
-      const response = await loginUser(formData);
-        setSuccess("Login successful!");
-        
-        const router = useRouter();
-
-        try {
-            await loginUser(formData);
-            router.push("/dashboard"); // or wherever your home page is
-        } catch (err) {
-            setErrors({ api: "Invalid credentials or server error." });
-        }
+      await loginUser(formData);
+      router.replace("/dashboard");
     } catch (err) {
       setErrors({ api: "Invalid credentials or server error." });
     }
@@ -53,8 +45,9 @@ export default function LoginForm() {
 
       <label>Email</label>
       <input
-        name="email"
-        value={formData.email}
+        name="username"
+        type="email"
+        value={formData.username}
         onChange={handleChange}
       />
       {errors.email && <p className="error">{errors.email}</p>}

@@ -1,13 +1,14 @@
-export async function getCurrentUser() {
+import { UserResponseDto } from "@/DTO/UserDto";
+import api from "@/lib/axios"
+import { AxiosResponse } from "axios";
+
+export async function getCurrentUser(): Promise<AxiosResponse<UserResponseDto> | null> {
   try {
-    const response = await fetch("http://localhost:4000/auth/me", {
-      method: "GET",
-      credentials: "include"
-    });
+    const response = await api.get<UserResponseDto>("/user/me");
 
-    if (!response.ok) return null;
+    if (response.status !== 200) return null;
 
-    return await response.json();
+    return response;
   } catch (err) {
     return null;
   }

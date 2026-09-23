@@ -1,6 +1,7 @@
 export type Errors = {
   username?: string;
-  email?: string;
+  name?: string;
+  lastName?: string;
   password?: string;
   confirmPassword?: string;
   api?: string;
@@ -8,19 +9,23 @@ export type Errors = {
 
 export function validateUserForm(data: {
   username: string;
-  email: string;
+  name: string;
+  lastName: string;
   password: string;
   confirmPassword: string;
 }): Errors {
   const errors: Errors = {};
     
-    if (!data.username || !data.username.trim()) {
-        errors.username = "Name is required";
+    if (!data.name || !data.name.trim()) {
+        errors.name = "Name is required";
     }
-    if (!data.email || !data.email.trim()) {
-        errors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(data.email)) {
-        errors.email = "Email is invalid";
+    if (!data.lastName || !data.lastName.trim()) {
+        errors.lastName = "Name is required";
+    }
+    if (!data.username || !data.username.trim()) {
+        errors.username = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(data.username)) {
+        errors.username = "Email is invalid";
     }
     if (!data.password || !data.password.trim()) {
         errors.password = "Password is required";
