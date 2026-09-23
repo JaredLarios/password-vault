@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 using PasswordVault.Auth;
 using PasswordVault.Users;
+using PasswordVault.Websites;
 using PasswordVault.Common.Database;
 using PasswordVault.Common.Interfaces;
 using PasswordVault.Common.Middleware;
