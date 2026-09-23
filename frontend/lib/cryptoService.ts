@@ -1,19 +1,23 @@
-import { Secret } from "fernet";
+import * as fernet from "fernet";
 
-const FERNET_KEY = process.env.NEXT_PUBLIC_PUBLIC_KEY;
+const configuredKey = process.env.NEXT_PUBLIC_MIDDLEWARE_SECRET_KEY;
 
-if (!FERNET_KEY) {
-  throw new Error("VITE_FERNET_KEY is not configured.");
+if (!configuredKey) {
+  throw new Error("NEXT_PUBLIC_MIDDLEWARE_SECRET_KEY is not configured.");
 }
+
+const FERNET_KEY = configuredKey
+  .replace(/\+/g, "-")
+  .replace(/\//g, "_");
+
+const secret = new fernet.Secret(FERNET_KEY);
 
 export const cryptoService = {
   encrypt(value: string): string {
-    const secret = new Secret(FERNET_KEY);
-    return secret.encrypt(value);
+    return new fernet.Token({ secret }).encode(value);
   },
 
   decrypt(value: string): string {
-    const secret = new Secret(FERNET_KEY);
-    return secret.decrypt(value);
+    return new fernet.Token({ secret, token: value, ttl: 0 }).decode();
   },
 };

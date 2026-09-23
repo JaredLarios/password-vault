@@ -10,55 +10,35 @@ const api = axios.create({
   withCredentials: true,
 });
 
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    // Handle global errors here (e.g., 401 Unauthorized redirect)
-    if (error.response?.status === 401) {
-      console.error('Unauthorized! Redirecting...');
-    }
-    return Promise.reject(error);
+api.interceptors.request.use((config) => {
+  const method = config.method?.toLowerCase();
+  const shouldEncrypt = ["post", "put", "patch"].includes(method ?? "");
+
+  if (
+    shouldEncrypt &&
+    config.data !== undefined &&
+    config.data !== null &&
+    typeof config.data !== "string"
+  ) {
+    config.data = encryptCredentials(config.data);
   }
-);
 
-api.interceptors.request.use(
-  (config) => {
-    const method = config.method?.toLowerCase();
-
-    const shouldEncrypt =
-      method === "post" ||
-      method === "put" ||
-      method === "patch";
-
-    if (
-      shouldEncrypt &&
-      config.data !== undefined &&
-      config.data !== null
-    ) {
-      config.data = encryptCredentials(config.data);
-      console.log(config.data);
-    }
-
-    return config;
-  },
-);
-
-// -------------------------
-// Response interceptor
-// -------------------------
+  return config;
+});
 
 api.interceptors.response.use(
   (response) => {
     if (
       response.data !== undefined &&
-      response.data !== null
+      response.data !== null &&
+      typeof response.data === "object"
     ) {
       response.data = decryptCredentials(response.data);
-      console.log(response.data);
     }
 
     return response;
   },
+  (error) => Promise.reject(error),
 );
 
 export default api;
