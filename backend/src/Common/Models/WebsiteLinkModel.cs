@@ -20,5 +20,5 @@ public class WebsiteLinkModel : BaseModel
     public int WebsiteId { get; set; }
 
     [ForeignKey(nameof(WebsiteId))]
-    public WebsiteModel UserWebsite { get; set; } = null!;
+    public WebsiteModel Website { get; set; } = null!;
 }

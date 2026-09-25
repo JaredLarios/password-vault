@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace PasswordVault.Common.Models;
 
 [Table("user_website_credential", Schema = "public")]
-public class WebsiteLinkModel : BaseModel
+public class WebsiteCredentialModel : BaseModel
 {
     [Key]
     [Column("user_website_credential_id")]
@@ -29,5 +29,5 @@ public class WebsiteLinkModel : BaseModel
     public int WebsiteId { get; set; }
 
     [ForeignKey(nameof(WebsiteId))]
-    public WebsiteModel UserWebsite { get; set; } = null!;
+    public WebsiteModel Website { get; set; } = null!;
 }
