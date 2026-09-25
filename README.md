@@ -7,7 +7,7 @@ This project is a secure password manager designed to help users avoid reusing p
 - [*Jared Larios](https://github.com/JaredLarios)
 - [Angela Hubbard](https://github.com/motherhubbard99)
 - [Fabian Betancourt](https://github.com/fabianrbv)
-- [Patrick Armani](https://github.com/patrickarmani)
+- [Efehi Nehikhare](https://github.com/Nehiz)
 
 ### Quotes
 - Jared Larios: _You must be the change you wish to see in the world_ - ___Mahatma Gandhi___
