@@ -6,10 +6,11 @@ using Microsoft.EntityFrameworkCore;
 
 using PasswordVault.Auth;
 using PasswordVault.Users;
+using PasswordVault.Websites;
 using PasswordVault.Common.Database;
 using PasswordVault.Common.Interfaces;
-using PasswordVault.Common.Repositories;
 using PasswordVault.Common.Middleware;
+using PasswordVault.Common.Repositories;
 
 DotEnv.Load();
 
@@ -107,6 +108,7 @@ builder.Services.AddKeyedSingleton<ICrypto>(
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<WebsiteService>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();

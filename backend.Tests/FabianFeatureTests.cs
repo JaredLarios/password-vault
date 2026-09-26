@@ -1,12 +1,12 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PasswordVault.Auth;
 using PasswordVault.Common.Database;
 using PasswordVault.Common.Models;
-using PasswordVault.Common.Services;
+using PasswordVault.Common.Repositories;
 using PasswordVault.Users;
+using PasswordVault.Websites;
 
 namespace PasswordVaultAPI.Tests;
 
@@ -20,21 +20,19 @@ public class FabianFeatureTests
             .Options;
 
         using var context = new AppDbContext(options);
-        var service = new UserService(context, new HashArgon2(), new CryptoFernet("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="));
+        var service = new UserService(context, new FernetRepository("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="), new Argon2Repository(), new Sha256Repository());
 
-        var result = await service.CreateUserAsync(new CreateUserRequest
+        var result = await service.CreateUserAsync(new NewUserDTO
         {
-            FirstName = "Fabian",
+            Name = "Fabian",
             LastName = "Betancourt",
             Username = "fabian@example.com",
             Password = "Password123!"
         });
 
         Assert.NotNull(result);
-        Assert.Equal("fabian@example.com", result.UsernameFer);
-        Assert.NotEqual("Password123!", result.Password);
-        Assert.True(result.is_temporal);
-        Assert.NotEqual(Guid.Empty, result.Uuid);
+        Assert.Equal("User created successfully", result.Message);
+        Assert.NotEqual(Guid.Empty, result.UserId);
         Assert.Equal(1, await context.Users.CountAsync());
     }
 
@@ -46,20 +44,20 @@ public class FabianFeatureTests
             .Options;
 
         using var context = new AppDbContext(options);
-        var service = new UserService(context, new HashArgon2(), new CryptoFernet("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="));
+        var service = new UserService(context, new FernetRepository("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="), new Argon2Repository(), new Sha256Repository());
 
-        await service.CreateUserAsync(new CreateUserRequest
+        await service.CreateUserAsync(new NewUserDTO
         {
-            FirstName = "Fabian",
+            Name = "Fabian",
             LastName = "Betancourt",
             Username = "fabian@example.com",
             Password = "Password123!"
         });
 
         var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
-            service.CreateUserAsync(new CreateUserRequest
+            service.CreateUserAsync(new NewUserDTO
             {
-                FirstName = "Fabian",
+                Name = "Fabian",
                 LastName = "Betancourt",
                 Username = "fabian@example.com",
                 Password = "Password123!"
@@ -88,14 +86,14 @@ public class FabianFeatureTests
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
-        var service = new UserService(context, new HashArgon2(), new CryptoFernet("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="));
-        var result = await service.GetCurrentUserAsync(user.Id);
+        var crypto = new FernetRepository("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=");
+        var service = new UserService(context, crypto, new Argon2Repository(), new Sha256Repository());
+        var result = await service.GetCurrentUserAsync(user.Uuid);
 
         Assert.NotNull(result);
         Assert.Equal("fabian@example.com", result!.Username);
-        Assert.Equal("Fabian", result.FirstName);
+        Assert.Equal("Fabian", result.Name);
         Assert.Equal("Betancourt", result.LastName);
-        Assert.Null(result.Password);
     }
 
     [Fact]
@@ -106,7 +104,7 @@ public class FabianFeatureTests
             .Options;
 
         using var context = new AppDbContext(options);
-        var service = new UserService(context, new HashArgon2(), new CryptoFernet("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="));
+        var service = new UserService(context, new FernetRepository("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="), new Argon2Repository(), new Sha256Repository());
         var controller = new UserController(service);
 
         var httpContext = new DefaultHttpContext();
@@ -137,7 +135,7 @@ public class FabianFeatureTests
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
-        var service = new UserService(context, new HashArgon2(), new CryptoFernet("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="));
+        var service = new UserService(context, new FernetRepository("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="), new Argon2Repository(), new Sha256Repository());
         var controller = new UserController(service);
 
         var httpContext = new DefaultHttpContext();
@@ -149,5 +147,128 @@ public class FabianFeatureTests
         var ok = Assert.IsType<OkObjectResult>(action);
         var payload = Assert.IsType<UserProfileResponse>(ok.Value);
         Assert.Equal("fabian@example.com", payload.Username);
+    }
+
+    [Fact]
+    public async Task WebsiteService_GetWebsites_ReturnsUrlsAndCredentialsForCurrentUser()
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+
+        using var context = new AppDbContext(options);
+        var crypto = new FernetRepository("MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=");
+        var user = new UserModel
+        {
+            Uuid = Guid.NewGuid(),
+            UsernameFer = crypto.GetEncryptedText("user@example.com"),
+            UsernameSha = "sha256",
+            Password = "hashed-password",
+            isActive = true
+        };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var website = new WebsiteModel
+        {
+            Uuid = Guid.NewGuid(),
+            UserId = user.Id,
+            WebsiteName = "Facebook"
+        };
+        context.Websites.Add(website);
+        context.WebsiteLinks.Add(new UserWebsiteLinkModel
+        {
+            WebsiteId = website.Id,
+            Url = "https://www.facebook.com"
+        });
+        context.WebsiteCredentials.Add(new UserWebsiteCredentialModel
+        {
+            WebsiteId = website.Id,
+            UsernameFer = crypto.GetEncryptedText("user@example.com"),
+            UsernameSha = new Sha256Repository().GetHash("user@example.com"),
+            PasswordFer = crypto.GetEncryptedText("secret-pass"),
+            PasswordSha = new Sha256Repository().GetHash("secret-pass")
+        });
+        await context.SaveChangesAsync();
+
+        var service = new WebsiteService(context, crypto, new Sha256Repository());
+
+        var result = await service.GetWebsitesAsync(user.Uuid, website.Uuid);
+
+        var item = Assert.Single(result);
+        Assert.Equal("Facebook", item.WebsiteName);
+        Assert.Contains("https://www.facebook.com", item.Urls);
+        var credential = Assert.Single(item.Credentials);
+        Assert.Equal("user@example.com", credential.WebsiteUsername);
+        Assert.Equal("secret-pass", credential.WebistePassword);
+    }
+
+    [Fact]
+    public async Task WebsiteService_UpdateWebsite_UpdatesWebsiteNameAndCredentialValues()
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+
+        using var context = new AppDbContext(options);
+        var crypto = new FernetRepository("MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=");
+        var user = new UserModel
+        {
+            Uuid = Guid.NewGuid(),
+            UsernameFer = crypto.GetEncryptedText("user@example.com"),
+            UsernameSha = "sha256",
+            Password = "hashed-password",
+            isActive = true
+        };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var website = new WebsiteModel
+        {
+            Uuid = Guid.NewGuid(),
+            UserId = user.Id,
+            WebsiteName = "Old Name"
+        };
+        context.Websites.Add(website);
+        context.WebsiteLinks.Add(new UserWebsiteLinkModel
+        {
+            WebsiteId = website.Id,
+            Url = "https://old.example.com"
+        });
+        var credential = new UserWebsiteCredentialModel
+        {
+            WebsiteId = website.Id,
+            UsernameFer = crypto.GetEncryptedText("old@example.com"),
+            UsernameSha = new Sha256Repository().GetHash("old@example.com"),
+            PasswordFer = crypto.GetEncryptedText("old-pass"),
+            PasswordSha = new Sha256Repository().GetHash("old-pass")
+        };
+        context.WebsiteCredentials.Add(credential);
+        await context.SaveChangesAsync();
+
+        var service = new WebsiteService(context, crypto, new Sha256Repository());
+
+        var response = await service.UpdateWebsiteAsync(
+            user.Uuid,
+            website.Uuid,
+            new UpdateWebsiteDto
+            {
+                WebsiteName = "New Name",
+                WebsiteUrl = "https://new.example.com",
+                WebsiteUsername = "new@example.com",
+                WebistePassword = "new-pass"
+            });
+
+        Assert.Equal("Website credentials updated successfully.", response.Message);
+
+        var updated = await context.Websites.Include(x => x.Links).Include(x => x.Credentials)
+            .SingleAsync(x => x.Uuid == website.Uuid);
+        Assert.Equal("New Name", updated.WebsiteName);
+        Assert.Contains(updated.Links, x => x.Url == "https://new.example.com");
+        Assert.Contains(updated.Credentials, x =>
+            crypto.GetDecryptedText(x.UsernameFer) == "new@example.com" &&
+            x.UsernameSha == new Sha256Repository().GetHash("new@example.com") &&
+            crypto.GetDecryptedText(x.PasswordFer) == "new-pass" &&
+            x.PasswordSha == new Sha256Repository().GetHash("new-pass"));
     }
 }
