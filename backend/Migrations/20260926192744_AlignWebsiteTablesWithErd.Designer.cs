@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PasswordVault.Common.Database;
@@ -11,9 +12,11 @@ using PasswordVault.Common.Database;
 namespace backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260926192744_AlignWebsiteTablesWithErd")]
+    partial class AlignWebsiteTablesWithErd
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -84,14 +87,14 @@ namespace backend.Migrations
                     b.ToTable("sys_user", "public");
                 });
 
-            modelBuilder.Entity("PasswordVault.Common.Models.WebsiteCredentialModel", b =>
+            modelBuilder.Entity("PasswordVault.Common.Models.UserWebsiteCredentialModel", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("bigint")
                         .HasColumnName("user_website_credential_id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -101,37 +104,44 @@ namespace backend.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
+                    b.Property<bool?>("IsSecure")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_secure");
 
-                    b.Property<Guid>("Uuid")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_website_credential_uuid");
-
-                    b.Property<int>("WebsiteId")
-                        .HasColumnType("integer")
-                        .HasColumnName("user_website_id");
-
-                    b.Property<string>("WebsitePasswordFer")
+                    b.Property<string>("PasswordFer")
                         .IsRequired()
                         .HasColumnType("varchar")
                         .HasColumnName("user_website_credential_password_fer");
 
-                    b.Property<string>("WebsitePasswordSha")
+                    b.Property<string>("PasswordSha")
                         .IsRequired()
-                        .HasColumnType("varchar")
+                        .HasColumnType("varchar(64)")
                         .HasColumnName("user_website_credential_password_sha");
 
-                    b.Property<string>("WebsiteUsernameFer")
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UsernameFer")
                         .IsRequired()
                         .HasColumnType("varchar")
                         .HasColumnName("user_website_credential_username_fer");
 
-                    b.Property<string>("WebsiteUsernameSha")
+                    b.Property<string>("UsernameSha")
                         .IsRequired()
-                        .HasColumnType("varchar")
+                        .HasColumnType("varchar(64)")
                         .HasColumnName("user_website_credential_username_sha");
+
+                    b.Property<string>("Uuid")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("varchar")
+                        .HasColumnName("user_website_credential_uuid")
+                        .HasDefaultValueSql("gen_random_uuid()::text");
+
+                    b.Property<long>("WebsiteId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_website_id");
 
                     b.Property<bool>("isActive")
                         .HasColumnType("boolean")
@@ -144,14 +154,14 @@ namespace backend.Migrations
                     b.ToTable("user_website_credential", "public");
                 });
 
-            modelBuilder.Entity("PasswordVault.Common.Models.WebsiteLinkModel", b =>
+            modelBuilder.Entity("PasswordVault.Common.Models.UserWebsiteLinkModel", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("bigint")
                         .HasColumnName("user_website_link_id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -165,18 +175,21 @@ namespace backend.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
-                    b.Property<Guid>("Uuid")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_website_link_uuid");
-
-                    b.Property<int>("WebsiteId")
-                        .HasColumnType("integer")
-                        .HasColumnName("user_website_id");
-
-                    b.Property<string>("WebsiteUrl")
+                    b.Property<string>("Url")
                         .IsRequired()
-                        .HasColumnType("varchar(240)")
+                        .HasColumnType("varchar")
                         .HasColumnName("user_website_link_url");
+
+                    b.Property<string>("Uuid")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("varchar")
+                        .HasColumnName("user_website_link_uuid")
+                        .HasDefaultValueSql("gen_random_uuid()::text");
+
+                    b.Property<long>("WebsiteId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_website_id");
 
                     b.Property<bool>("isActive")
                         .HasColumnType("boolean")
@@ -235,10 +248,10 @@ namespace backend.Migrations
                     b.ToTable("user_website", "public");
                 });
 
-            modelBuilder.Entity("PasswordVault.Common.Models.WebsiteCredentialModel", b =>
+            modelBuilder.Entity("PasswordVault.Common.Models.UserWebsiteCredentialModel", b =>
                 {
                     b.HasOne("PasswordVault.Common.Models.WebsiteModel", "Website")
-                        .WithMany("WebsiteCredentials")
+                        .WithMany("Credentials")
                         .HasForeignKey("WebsiteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -246,10 +259,10 @@ namespace backend.Migrations
                     b.Navigation("Website");
                 });
 
-            modelBuilder.Entity("PasswordVault.Common.Models.WebsiteLinkModel", b =>
+            modelBuilder.Entity("PasswordVault.Common.Models.UserWebsiteLinkModel", b =>
                 {
                     b.HasOne("PasswordVault.Common.Models.WebsiteModel", "Website")
-                        .WithMany("WebsiteLinks")
+                        .WithMany("Links")
                         .HasForeignKey("WebsiteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -275,9 +288,9 @@ namespace backend.Migrations
 
             modelBuilder.Entity("PasswordVault.Common.Models.WebsiteModel", b =>
                 {
-                    b.Navigation("WebsiteCredentials");
+                    b.Navigation("Credentials");
 
-                    b.Navigation("WebsiteLinks");
+                    b.Navigation("Links");
                 });
 #pragma warning restore 612, 618
         }
