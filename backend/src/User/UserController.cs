@@ -40,8 +40,8 @@ public class UserController : ControllerBase
         {
             var userIdValue = User.Identity?.Name;
 
-            if (!Guid.TryParse(userIdValue, out var userUuid))  return Unauthorized();
-            
+            if (!Guid.TryParse(userIdValue, out var userUuid)) return Unauthorized();
+
             UserProfileResponse profile = await _userService.GetCurrentUserAsync(userUuid);
             return Ok(profile);
         }
