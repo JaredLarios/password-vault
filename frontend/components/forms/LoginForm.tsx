@@ -3,8 +3,8 @@
 import { useState } from "react";
 import type React from "react";
 import { validateLoginForm, LoginErrors } from "@/lib/validations";
-import { useRouter } from 'next/navigation';
 import { loginUser } from "@/lib/loginUser";
+import { useRouter } from "next/router";
 
 export default function LoginForm() {
   const router = useRouter();
