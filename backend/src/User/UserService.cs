@@ -54,8 +54,8 @@ public class UserService
             Uuid = Guid.NewGuid(),
             UsernameFer = _crypto.GetEncryptedText(newUser.Username),
             UsernameSha = usernameHash,
-            NameFer = string.IsNullOrEmpty(newUser.Name?.Trim()) ? 
-                null : 
+            NameFer = string.IsNullOrEmpty(newUser.Name?.Trim()) ?
+                null :
                 _crypto.GetEncryptedText(newUser.Name.Trim()),
             LastNameFer = string.IsNullOrEmpty(newUser.LastName?.Trim()) ?
                 null :
