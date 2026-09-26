@@ -14,6 +14,19 @@ export default function CredentialList({
   onAddCredential,
 }: CredentialListProps) {
   const [showForm, setShowForm] = useState(false);
+  const [revealedIds, setRevealedIds] = useState<Set<number>>(new Set());
+
+  const toggleReveal = (i: number) => {
+    setRevealedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) {
+        next.delete(i);
+      } else {
+        next.add(i);
+      }
+      return next;
+    });
+  };
 
   return (
     <div className="mt-4">
@@ -21,8 +34,19 @@ export default function CredentialList({
 
       <ul className="list-disc ml-6">
         {credentials.map((cred: Credential, i) => (
-          <li key={i}>
-            {cred.username}
+          <li key={i} className="flex items-center gap-2">
+            <span>{cred.username}</span>
+            <span className="font-mono">
+              {revealedIds.has(i) ? cred.password : "••••••••"}
+            </span>
+            <button
+              type="button"
+              aria-label={revealedIds.has(i) ? "Hide password" : "Show password"}
+              onClick={() => toggleReveal(i)}
+              className="text-sm text-purple-600"
+            >
+              {revealedIds.has(i) ? "🙈" : "👁"}
+            </button>
           </li>
         ))}
       </ul>
