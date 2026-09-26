@@ -16,7 +16,7 @@ public class WebsiteListResponse
     public List<WebsiteListCredentialResponse> Credentials { get; set; } = [];
 }
 
-public class UpdateWebsiteRequest
+public class UpdateWebsiteDto
 {
     [StringLength(2048)]
     public string? WebsiteName { get; set; }

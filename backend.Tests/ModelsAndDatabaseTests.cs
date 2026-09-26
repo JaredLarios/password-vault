@@ -13,21 +13,21 @@ public class ModelsAndDatabaseTests
         var user = new UserModel();
         var website = new WebsiteModel();
 
-        user.Id = 1;
-        website.Id = 2;
+        user.Id = 1L;
+        website.Id = 2L;
         website.UserId = user.Id;
 
         Assert.False(user.isActive);
-        Assert.Equal(1, user.Id);
+        Assert.Equal(1L, user.Id);
         Assert.True(user.isTemporal);
         Assert.NotEqual(Guid.Empty, user.Uuid);
         Assert.NotNull(user.Websites);
         Assert.Equal(string.Empty, user.UsernameFer);
         Assert.Equal(string.Empty, user.Password);
         Assert.NotEqual(Guid.Empty, website.Uuid);
-        Assert.Equal(2, website.Id);
+        Assert.Equal(2L, website.Id);
         Assert.Equal(string.Empty, website.WebsiteName);
-        Assert.Equal(1, website.UserId);
+        Assert.Equal(1L, website.UserId);
         Assert.Null(website.UpdatedAt);
         Assert.Null(website.DeletedAt);
         Assert.InRange(user.CreatedAt, DateTime.UtcNow.AddSeconds(-5), DateTime.UtcNow.AddSeconds(5));
@@ -43,10 +43,17 @@ public class ModelsAndDatabaseTests
 
         var userEntity = context.Model.FindEntityType(typeof(UserModel));
         var websiteEntity = context.Model.FindEntityType(typeof(WebsiteModel));
+        var linkEntity = context.Model.FindEntityType(typeof(UserWebsiteLinkModel));
+        var credentialEntity = context.Model.FindEntityType(typeof(UserWebsiteCredentialModel));
 
         Assert.Equal("sys_user", userEntity?.GetTableName());
         Assert.Equal("public", userEntity?.GetSchema());
         Assert.Equal("user_website", websiteEntity?.GetTableName());
+        Assert.Equal("user_website_link", linkEntity?.GetTableName());
+        Assert.Equal("user_website_credential", credentialEntity?.GetTableName());
+        Assert.Equal("user_website_link_url", linkEntity?.FindProperty(nameof(UserWebsiteLinkModel.Url))?.GetColumnName());
+        Assert.Equal("user_website_credential_username_fer", credentialEntity?.FindProperty(nameof(UserWebsiteCredentialModel.UsernameFer))?.GetColumnName());
+        Assert.Equal("user_website_credential_password_sha", credentialEntity?.FindProperty(nameof(UserWebsiteCredentialModel.PasswordSha))?.GetColumnName());
         Assert.NotNull(userEntity?.FindNavigation(nameof(UserModel.Websites)));
         Assert.Equal(nameof(WebsiteModel.User), websiteEntity?.FindNavigation(nameof(WebsiteModel.User))?.Name);
         Assert.Equal(nameof(WebsiteModel.UserId), websiteEntity?.GetForeignKeys().Single().Properties.Single().Name);

@@ -42,7 +42,7 @@ public class WebsiteController : ControllerBase
     [HttpPut("{websiteUuid:guid}")]
     public async Task<ActionResult<WebsiteUpdateResponse>> UpdateWebsite(
         [FromRoute] Guid websiteUuid,
-        [FromBody] UpdateWebsiteRequest request)
+        [FromBody] UpdateWebsiteDto request)
     {
         try
         {

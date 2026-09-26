@@ -132,7 +132,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors();
-app.UseMiddleware<FieldEncryptionMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 

@@ -115,20 +115,11 @@ The request does not have a body. The authenticated JWT cookie is required.
 
 The password and internal password hash are never included in the response.
 
-## Encrypted Payload Middleware
+## Credential Payload Encryption
 
-The API supports encrypted JSON fields through the `FieldEncryptionMiddleware`.
-To use it, send the following header with a JSON request:
+The existing `SecurityMiddleware` decrypts credential fields in JSON `POST`, `PUT`, and `PATCH` request bodies and encrypts matching credential fields in JSON responses.
 
-```http
-X-Encrypted-Payload: true
-```
-
-When the header is enabled:
-
-- Every string value in the JSON request body is decrypted before the controller receives it.
-- Every string value in a JSON response is encrypted before it is sent to the client.
-- The middleware uses `CRYPTO_MIDDLEWARE_SECRET_KEY`.
-- The same key and Fernet implementation must be used by the client to encrypt requests and decrypt responses.
-
-Requests without this header continue to use regular plaintext JSON. Passwords are still stored as Argon2 hashes and are never reversibly encrypted in the database.
+- Credential fields are identified by property names containing or ending in `Username` or `Password`.
+- The middleware uses `CRYPTO_MIDDLEWARE_SECRET_KEY`; clients must use the same Fernet key to encrypt request values and decrypt response values.
+- Website credentials are additionally encrypted at rest with `CRYPTO_DB_SECRET_KEY`; SHA-256 digests are stored alongside them.
+- Unrelated strings such as website names and URLs are not transformed.

@@ -7,10 +7,10 @@ namespace PasswordVault.Common.Models;
 public class UserModel : BaseModel
 {
     [Key]
-    [Column("sys_user_id")]
-    public int Id { get; set; }
+    [Column("sys_user_id", TypeName = "bigint")]
+    public long Id { get; set; }
 
-    [Column("sys_user_uuid")]
+    [Column("sys_user_uuid", TypeName = "varchar")]
     public Guid Uuid { get; set; } = Guid.NewGuid();
 
     [Column("sys_user_username_fer", TypeName = "varchar(420)")]

@@ -176,21 +176,22 @@ public class FabianFeatureTests
             WebsiteName = "Facebook"
         };
         context.Websites.Add(website);
-        context.WebsiteUrls.Add(new WebsiteUrlModel
+        context.WebsiteLinks.Add(new UserWebsiteLinkModel
         {
             WebsiteId = website.Id,
             Url = "https://www.facebook.com"
         });
-        context.WebsiteCredentials.Add(new WebsiteCredentialModel
+        context.WebsiteCredentials.Add(new UserWebsiteCredentialModel
         {
             WebsiteId = website.Id,
-            WebsiteUsername = crypto.GetEncryptedText("user@example.com"),
-            WebsitePassword = crypto.GetEncryptedText("secret-pass"),
-            WebsiteUserId = Guid.NewGuid()
+            UsernameFer = crypto.GetEncryptedText("user@example.com"),
+            UsernameSha = new Sha256Repository().GetHash("user@example.com"),
+            PasswordFer = crypto.GetEncryptedText("secret-pass"),
+            PasswordSha = new Sha256Repository().GetHash("secret-pass")
         });
         await context.SaveChangesAsync();
 
-        var service = new WebsiteService(context, crypto);
+        var service = new WebsiteService(context, crypto, new Sha256Repository());
 
         var result = await service.GetWebsitesAsync(user.Uuid, website.Uuid);
 
@@ -229,27 +230,28 @@ public class FabianFeatureTests
             WebsiteName = "Old Name"
         };
         context.Websites.Add(website);
-        context.WebsiteUrls.Add(new WebsiteUrlModel
+        context.WebsiteLinks.Add(new UserWebsiteLinkModel
         {
             WebsiteId = website.Id,
             Url = "https://old.example.com"
         });
-        var credential = new WebsiteCredentialModel
+        var credential = new UserWebsiteCredentialModel
         {
             WebsiteId = website.Id,
-            WebsiteUsername = crypto.GetEncryptedText("old@example.com"),
-            WebsitePassword = crypto.GetEncryptedText("old-pass"),
-            WebsiteUserId = Guid.NewGuid()
+            UsernameFer = crypto.GetEncryptedText("old@example.com"),
+            UsernameSha = new Sha256Repository().GetHash("old@example.com"),
+            PasswordFer = crypto.GetEncryptedText("old-pass"),
+            PasswordSha = new Sha256Repository().GetHash("old-pass")
         };
         context.WebsiteCredentials.Add(credential);
         await context.SaveChangesAsync();
 
-        var service = new WebsiteService(context, crypto);
+        var service = new WebsiteService(context, crypto, new Sha256Repository());
 
         var response = await service.UpdateWebsiteAsync(
             user.Uuid,
             website.Uuid,
-            new UpdateWebsiteRequest
+            new UpdateWebsiteDto
             {
                 WebsiteName = "New Name",
                 WebsiteUrl = "https://new.example.com",
@@ -259,12 +261,14 @@ public class FabianFeatureTests
 
         Assert.Equal("Website credentials updated successfully.", response.Message);
 
-        var updated = await context.Websites.Include(x => x.Urls).Include(x => x.Credentials)
+        var updated = await context.Websites.Include(x => x.Links).Include(x => x.Credentials)
             .SingleAsync(x => x.Uuid == website.Uuid);
         Assert.Equal("New Name", updated.WebsiteName);
-        Assert.Contains(updated.Urls, x => x.Url == "https://new.example.com");
+        Assert.Contains(updated.Links, x => x.Url == "https://new.example.com");
         Assert.Contains(updated.Credentials, x =>
-            crypto.GetDecryptedText(x.WebsiteUsername) == "new@example.com" &&
-            crypto.GetDecryptedText(x.WebsitePassword) == "new-pass");
+            crypto.GetDecryptedText(x.UsernameFer) == "new@example.com" &&
+            x.UsernameSha == new Sha256Repository().GetHash("new@example.com") &&
+            crypto.GetDecryptedText(x.PasswordFer) == "new-pass" &&
+            x.PasswordSha == new Sha256Repository().GetHash("new-pass"));
     }
 }
