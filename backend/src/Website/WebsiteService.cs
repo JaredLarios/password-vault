@@ -27,6 +27,15 @@ public class WebsiteService
         _sha1 = sha1;
     }
 
+    private async Task<UserModel?> GetUserByUuidAsync(Guid userUuid)
+    {
+        return await _context
+            .Users
+            .Where(user => user.Uuid == userUuid && user.isActive)
+            .FirstOrDefaultAsync();
+    }
+
+
     private async Task<WebsiteModel?> GetWebsiteByNameOrLinkAsync(string websiteName, string websiteLink, Guid userUuid)
     {
         return await _context
@@ -40,13 +49,31 @@ public class WebsiteService
             .FirstOrDefaultAsync();
     }
 
-    private async Task<UserModel?> GetUserByUuidAsync(Guid userUuid)
+    private async Task<WebsiteModel?> GetWebsiteByUuidAsync(Guid userUuid, Guid websiteUuid)
     {
-        return await _context
-            .Users
-            .Where(user => user.Uuid == userUuid && user.isActive)
-            .FirstOrDefaultAsync();
+        return await _context.Websites
+            .Include(website => website.WebsiteLinks)
+            .Include(website => website.WebsiteCredentials)
+            .FirstOrDefaultAsync(website =>
+                website.Uuid == websiteUuid &&
+                website.User.Uuid == userUuid &&
+                website.isActive);
     }
+
+    private async Task<List<WebsiteModel>> GetWebsitesByUserUuidAsync(Guid userUuid, Guid? websiteUuid)
+    {
+        return await _context.Websites
+            .Include(website => website.WebsiteLinks)
+            .Include(website => website.WebsiteCredentials)
+            .Where(website => website.User.Uuid == userUuid &&
+                website.isActive &&
+                (
+                    !websiteUuid.HasValue ||
+                    website.Uuid == websiteUuid)
+                )
+            .ToListAsync();
+    }
+
 
     private WebsiteLinkModel CreateWebsiteLink(string websiteUrl)
     {
@@ -81,6 +108,7 @@ public class WebsiteService
             WebsitePasswordSha = _sha1.GetHash(newWebsite.WebsitePassword)
         };
     }
+
 
     public async Task<NewWebsiteResponse> CreateNewWebsiteAsync(NewWebsiteDTO newWebsite, Guid userUuid)
     {
@@ -120,118 +148,105 @@ public class WebsiteService
         }
     }
 
-    private async Task<WebsiteModel?> GetWebsiteByNameOrLinkAsync(string websiteName, string websiteLink, Guid userUuid)
+    public async Task<List<WebsiteListResponse>> GetWebsitesAsync(Guid userUuid, Guid? websiteUuid)
     {
-        var user = await _context.Users
-            .Include(u => u.Websites)
-            .ThenInclude(w => w.Urls)
-            .Include(u => u.Websites)
-            .ThenInclude(w => w.Credentials)
-            .FirstOrDefaultAsync(u => u.Uuid == userUuid && u.isActive);
+        var websites = await GetWebsitesByUserUuidAsync(userUuid, websiteUuid);
 
-        if (user == null)
+        return websites.Select(website => new WebsiteListResponse
         {
-            throw new ArgumentException("User not found.");
-        }
-
-        var websites = user.Websites
-            .Where(w => w.isActive && (websiteUuid == Guid.Empty || w.Uuid == websiteUuid))
-            .ToList();
-
-        return websites.Select(w => new WebsiteListResponse
-        {
-            WebsiteName = w.WebsiteName,
-            Urls = w.Urls
-                .Where(url => url.isActive)
-                .Select(url => url.Url)
+            WebsiteId = website.Uuid,
+            WebsiteName = website.WebsiteName,
+            Urls = website.WebsiteLinks
+                .Where(link => link.isActive)
+                .Select(link => link.WebsiteUrl)
                 .ToList(),
-            Credentials = w.Credentials
-                .Where(c => c.isActive)
-                .Select(c => new WebsiteListCredentialResponse
+            Credentials = website.WebsiteCredentials
+                .Where(credential => credential.isActive)
+                .Select(credential => new WebsiteListCredentialResponse
                 {
-                    WebsiteUserId = c.WebsiteUserId,
-                    WebsiteUsername = _crypto.GetDecryptedText(c.WebsiteUsername),
-                    WebistePassword = _crypto.GetDecryptedText(c.WebsitePassword)
+                    WebsiteUserId = credential.Uuid,
+                    WebsiteUsername = _crypto.GetDecryptedText(credential.WebsiteUsernameFer),
+                    WebsitePassword = _crypto.GetDecryptedText(credential.WebsitePasswordFer)
                 })
                 .ToList()
         }).ToList();
     }
 
-    public async Task<WebsiteUpdateResponse> UpdateWebsiteAsync(Guid userUuid, Guid websiteUuid, UpdateWebsiteRequest request)
+    public async Task<NewWebsiteResponse> UpdateWebsiteAsync(Guid userUuid, Guid websiteUuid, UpdateWebsiteDTO request)
     {
-        if (request == null)
+        ArgumentNullException.ThrowIfNull(request);
+
+        var website = await GetWebsiteByUuidAsync(userUuid, websiteUuid);
+
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        try
         {
-            throw new ArgumentException("Invalid request.");
-        }
 
-        var website = await _context.Websites
-            .Include(w => w.Urls)
-            .Include(w => w.Credentials)
-            .FirstOrDefaultAsync(w => w.Uuid == websiteUuid && w.UserId == _context.Users
-                .Where(u => u.Uuid == userUuid && u.isActive)
-                .Select(u => u.Id)
-                .FirstOrDefault() && w.isActive);
+            if (website == null) throw new ArgumentException("Website not found.");
 
-        if (website == null)
-        {
-            throw new ArgumentException("Website not found.");
-        }
+            if (!string.IsNullOrWhiteSpace(request.WebsiteName)) website.WebsiteName = request.WebsiteName;
 
-        if (!string.IsNullOrWhiteSpace(request.WebsiteName))
-        {
-            website.WebsiteName = request.WebsiteName;
-        }
 
-        if (!string.IsNullOrWhiteSpace(request.WebsiteUrl))
-        {
-            var existingUrl = website.Urls.FirstOrDefault(url => url.isActive);
-
-            if (existingUrl == null)
+            if (!string.IsNullOrWhiteSpace(request.WebsiteUrl))
             {
-                website.Urls.Add(new WebsiteUrlModel
+                var existingLink = website.WebsiteLinks.FirstOrDefault(link =>
+                    link.isActive && link.WebsiteUrl == request.WebsiteUrl);
+
+                if (existingLink == null)
                 {
-                    Url = request.WebsiteUrl,
-                    WebsiteId = website.Id,
-                    isActive = true
-                });
+                    website.WebsiteLinks.Add(new WebsiteLinkModel
+                    {
+                        WebsiteUrl = request.WebsiteUrl,
+                        WebsiteId = website.Id
+                    });
+                }
+                else
+                {
+                    existingLink.WebsiteUrl = request.WebsiteUrl;
+                }
             }
-            else
-            {
-                existingUrl.Url = request.WebsiteUrl;
-            }
-        }
 
-        if (!string.IsNullOrWhiteSpace(request.WebsiteUsername) || !string.IsNullOrWhiteSpace(request.WebistePassword))
-        {
-            var credential = website.Credentials.FirstOrDefault(c => c.isActive) ?? new WebsiteCredentialModel
+            if (!string.IsNullOrWhiteSpace(request.WebsiteUsername) ||
+                !string.IsNullOrWhiteSpace(request.WebsitePassword))
             {
-                WebsiteUserId = Guid.NewGuid(),
-                WebsiteId = website.Id,
-                isActive = true
+                var credential = website.WebsiteCredentials.FirstOrDefault(c => c.isActive);
+                if (credential == null)
+                {
+                    credential = new WebsiteCredentialModel
+                    {
+                        WebsiteId = website.Id,
+                        isActive = true
+                    };
+                    website.WebsiteCredentials.Add(credential);
+                }
+
+                if (!string.IsNullOrWhiteSpace(request.WebsiteUsername))
+                {
+                    credential.WebsiteUsernameFer = _crypto.GetEncryptedText(request.WebsiteUsername);
+                    credential.WebsiteUsernameSha = _sha256.GetHash(request.WebsiteUsername);
+                }
+
+                if (!string.IsNullOrWhiteSpace(request.WebsitePassword))
+                {
+                    credential.WebsitePasswordFer = _crypto.GetEncryptedText(request.WebsitePassword);
+                    credential.WebsitePasswordSha = _sha1.GetHash(request.WebsitePassword);
+                }
+            }
+
+            website.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return new NewWebsiteResponse
+            {
+                Message = "Website credentials updated successfully."
             };
-
-            if (!string.IsNullOrWhiteSpace(request.WebsiteUsername))
-            {
-                credential.WebsiteUsername = _crypto.GetEncryptedText(request.WebsiteUsername);
-            }
-
-            if (!string.IsNullOrWhiteSpace(request.WebistePassword))
-            {
-                credential.WebsitePassword = _crypto.GetEncryptedText(request.WebistePassword);
-            }
-
-            if (website.Credentials.Any(c => c.Id == credential.Id) == false)
-            {
-                website.Credentials.Add(credential);
-            }
         }
-
-        website.UpdatedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-
-        return new WebsiteUpdateResponse
+        catch
         {
-            Message = "Website credentials updated successfully."
-        };
+            await transaction.RollbackAsync();
+            throw;
+        }
     }
 }

@@ -16,8 +16,8 @@ public class WebsiteModel : BaseModel
     [Column("user_website_name", TypeName = "varchar")]
     public string WebsiteName { get; set; } = string.Empty;
 
-    [Column("sys_user_id", TypeName = "bigint")]
-    public long UserId { get; set; }
+    [Column("sys_user_id")]
+    public int UserId { get; set; }
 
     [ForeignKey(nameof(UserId))]
     public UserModel User { get; set; } = null!;

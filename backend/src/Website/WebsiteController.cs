@@ -15,14 +15,17 @@ public class WebsiteController : ControllerBase
         _websiteService = websiteService;
     }
 
-    [HttpPost()]
+    [HttpPost]
     public async Task<ActionResult<NewWebsiteResponse>> CreateNewWebsite([FromBody] NewWebsiteDTO newUser)
     {
         try
         {
             var userIdValue = User.Identity?.Name;
+
             if (!Guid.TryParse(userIdValue, out var userUuid)) return Unauthorized();
 
+            NewWebsiteResponse response = await _websiteService.CreateNewWebsiteAsync(newUser, userUuid);
+            return Ok(response);
         }
         catch (ArgumentException ex)
         {
@@ -35,7 +38,7 @@ public class WebsiteController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<WebsiteListResponse>>> GetWebsites([FromQuery] Guid websiteUuid)
+    public async Task<ActionResult<IEnumerable<WebsiteListResponse>>> GetWebsites([FromQuery] Guid? websiteUuid)
     {
         try
         {
@@ -59,9 +62,9 @@ public class WebsiteController : ControllerBase
     }
 
     [HttpPut("{websiteUuid:guid}")]
-    public async Task<ActionResult<WebsiteUpdateResponse>> UpdateWebsite(
+    public async Task<ActionResult<NewWebsiteResponse>> UpdateWebsite(
         [FromRoute] Guid websiteUuid,
-        [FromBody] UpdateWebsiteRequest request)
+        [FromBody] UpdateWebsiteDTO request)
     {
         try
         {
