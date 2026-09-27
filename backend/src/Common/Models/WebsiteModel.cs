@@ -7,10 +7,10 @@ namespace PasswordVault.Common.Models;
 public class WebsiteModel : BaseModel
 {
     [Key]
-    [Column("user_website_id", TypeName = "bigint")]
-    public long Id { get; set; }
+    [Column("user_website_id")]
+    public int Id { get; set; }
 
-    [Column("user_website_uuid", TypeName = "varchar")]
+    [Column("user_website_uuid")]
     public Guid Uuid { get; set; } = Guid.NewGuid();
 
     [Column("user_website_name", TypeName = "varchar")]

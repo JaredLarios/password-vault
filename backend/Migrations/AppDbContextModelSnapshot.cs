@@ -24,12 +24,12 @@ namespace backend.Migrations
 
             modelBuilder.Entity("PasswordVault.Common.Models.UserModel", b =>
                 {
-                    b.Property<long>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
+                        .HasColumnType("integer")
                         .HasColumnName("sys_user_id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -66,9 +66,8 @@ namespace backend.Migrations
                         .HasColumnType("varchar(64)")
                         .HasColumnName("sys_user_username_sha");
 
-                    b.Property<string>("Uuid")
-                        .IsRequired()
-                        .HasColumnType("varchar")
+                    b.Property<Guid>("Uuid")
+                        .HasColumnType("uuid")
                         .HasColumnName("sys_user_uuid");
 
                     b.Property<bool>("isActive")
@@ -191,12 +190,12 @@ namespace backend.Migrations
 
             modelBuilder.Entity("PasswordVault.Common.Models.WebsiteModel", b =>
                 {
-                    b.Property<long>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
+                        .HasColumnType("integer")
                         .HasColumnName("user_website_id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -210,13 +209,12 @@ namespace backend.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint")
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
                         .HasColumnName("sys_user_id");
 
-                    b.Property<string>("Uuid")
-                        .IsRequired()
-                        .HasColumnType("varchar")
+                    b.Property<Guid>("Uuid")
+                        .HasColumnType("uuid")
                         .HasColumnName("user_website_uuid");
 
                     b.Property<string>("WebsiteName")
