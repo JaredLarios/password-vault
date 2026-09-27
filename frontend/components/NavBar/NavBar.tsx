@@ -3,22 +3,38 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { logoutUser } from "@/lib/logoutUser";
-import { isLoggedIn } from "@/lib/auth";
+import { authChangeEvent } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/getCurrentUser";
 import { useEffect, useState } from "react";
 
 export default function NavBar() {
   const pathname = usePathname();
   const router = useRouter();
   const [loggedIn, setLoggedIn] = useState(false);
-  
-   useEffect(() => {
-    setLoggedIn(isLoggedIn());
+
+  useEffect(() => {
+    let isActive = true;
+
+    function checkAuthentication() {
+      void getCurrentUser().then((user) => {
+        if (isActive) setLoggedIn(user !== null);
+      });
+    }
+
+    checkAuthentication();
+    window.addEventListener(authChangeEvent, checkAuthentication);
+
+    return () => {
+      isActive = false;
+      window.removeEventListener(authChangeEvent, checkAuthentication);
+    };
   }, []);
 
+  if (pathname === "/login" || !loggedIn) return null;
+
   const links = [
-    { href: "dashboard", label: "Dashboard"},
-    { href: "/users/new", label: "Create User" },
-    { href: "/login", label: "Login" }
+    { href: "/dashboard", label: "Dashboard" },
+    { href: "/websites", label: "Websites" },
   ];
 
   async function handleLogout() {
