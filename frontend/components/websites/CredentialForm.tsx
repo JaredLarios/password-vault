@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Credential } from "@/DTO/Credential";
+import api from "@/lib/axios";
 
 interface CredentialFormProps {
   url: string;
@@ -15,11 +16,7 @@ export default function CredentialForm({ url, onSubmit }: CredentialFormProps) {
 
     const body = { url, username, password };
 
-    await fetch("/api/credentials/new", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    await api.post("/website", body);
 
     onSubmit(body);
   };

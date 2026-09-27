@@ -62,16 +62,17 @@ public class WebsiteService
 
     private async Task<List<WebsiteModel>> GetWebsitesByUserUuidAsync(Guid userUuid, Guid? websiteUuid)
     {
-        return await _context.Websites
+        var query = _context.Websites
             .Include(website => website.WebsiteLinks)
             .Include(website => website.WebsiteCredentials)
-            .Where(website => website.User.Uuid == userUuid &&
-                website.isActive &&
-                (
-                    !websiteUuid.HasValue ||
-                    website.Uuid == websiteUuid)
-                )
-            .ToListAsync();
+            .Where(website => website.User.Uuid == userUuid && website.isActive);
+
+        if (websiteUuid.HasValue)
+        {
+            query = query.Where(website => website.Uuid == websiteUuid);
+        }
+
+        return await query.ToListAsync();
     }
 
 
