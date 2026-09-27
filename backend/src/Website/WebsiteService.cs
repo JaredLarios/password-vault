@@ -27,6 +27,15 @@ public class WebsiteService
         _sha1 = sha1;
     }
 
+    private async Task<UserModel?> GetUserByUuidAsync(Guid userUuid)
+    {
+        return await _context
+            .Users
+            .Where(user => user.Uuid == userUuid && user.isActive)
+            .FirstOrDefaultAsync();
+    }
+
+
     private async Task<WebsiteModel?> GetWebsiteByNameOrLinkAsync(string websiteName, string websiteLink, Guid userUuid)
     {
         return await _context
@@ -40,13 +49,31 @@ public class WebsiteService
             .FirstOrDefaultAsync();
     }
 
-    private async Task<UserModel?> GetUserByUuidAsync(Guid userUuid)
+    private async Task<WebsiteModel?> GetWebsiteByUuidAsync(Guid userUuid, Guid websiteUuid)
     {
-        return await _context
-            .Users
-            .Where(user => user.Uuid == userUuid && user.isActive)
-            .FirstOrDefaultAsync();
+        return await _context.Websites
+            .Include(website => website.WebsiteLinks)
+            .Include(website => website.WebsiteCredentials)
+            .FirstOrDefaultAsync(website =>
+                website.Uuid == websiteUuid &&
+                website.User.Uuid == userUuid &&
+                website.isActive);
     }
+
+    private async Task<List<WebsiteModel>> GetWebsitesByUserUuidAsync(Guid userUuid, Guid? websiteUuid)
+    {
+        return await _context.Websites
+            .Include(website => website.WebsiteLinks)
+            .Include(website => website.WebsiteCredentials)
+            .Where(website => website.User.Uuid == userUuid &&
+                website.isActive &&
+                (
+                    !websiteUuid.HasValue ||
+                    website.Uuid == websiteUuid)
+                )
+            .ToListAsync();
+    }
+
 
     private WebsiteLinkModel CreateWebsiteLink(string websiteUrl)
     {
@@ -82,6 +109,7 @@ public class WebsiteService
         };
     }
 
+
     public async Task<NewWebsiteResponse> CreateNewWebsiteAsync(NewWebsiteDTO newWebsite, Guid userUuid)
     {
         WebsiteModel? existingWebsite = await GetWebsiteByNameOrLinkAsync(
@@ -112,6 +140,108 @@ public class WebsiteService
             await transaction.CommitAsync();
 
             return new NewWebsiteResponse { Message = "Website credentials saved successfully." };
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task<List<WebsiteListResponse>> GetWebsitesAsync(Guid userUuid, Guid? websiteUuid)
+    {
+        var websites = await GetWebsitesByUserUuidAsync(userUuid, websiteUuid);
+
+        return websites.Select(website => new WebsiteListResponse
+        {
+            WebsiteId = website.Uuid,
+            WebsiteName = website.WebsiteName,
+            Urls = website.WebsiteLinks
+                .Where(link => link.isActive)
+                .Select(link => link.WebsiteUrl)
+                .ToList(),
+            Credentials = website.WebsiteCredentials
+                .Where(credential => credential.isActive)
+                .Select(credential => new WebsiteListCredentialResponse
+                {
+                    WebsiteUserId = credential.Uuid,
+                    WebsiteUsername = _crypto.GetDecryptedText(credential.WebsiteUsernameFer),
+                    WebsitePassword = _crypto.GetDecryptedText(credential.WebsitePasswordFer)
+                })
+                .ToList()
+        }).ToList();
+    }
+
+    public async Task<NewWebsiteResponse> UpdateWebsiteAsync(Guid userUuid, Guid websiteUuid, UpdateWebsiteDTO request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var website = await GetWebsiteByUuidAsync(userUuid, websiteUuid);
+
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        try
+        {
+
+            if (website == null) throw new ArgumentException("Website not found.");
+
+            if (!string.IsNullOrWhiteSpace(request.WebsiteName)) website.WebsiteName = request.WebsiteName;
+
+
+            if (!string.IsNullOrWhiteSpace(request.WebsiteUrl))
+            {
+                var existingLink = website.WebsiteLinks.FirstOrDefault(link =>
+                    link.isActive && link.WebsiteUrl == request.WebsiteUrl);
+
+                if (existingLink == null)
+                {
+                    website.WebsiteLinks.Add(new WebsiteLinkModel
+                    {
+                        WebsiteUrl = request.WebsiteUrl,
+                        WebsiteId = website.Id
+                    });
+                }
+                else
+                {
+                    existingLink.WebsiteUrl = request.WebsiteUrl;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.WebsiteUsername) ||
+                !string.IsNullOrWhiteSpace(request.WebsitePassword))
+            {
+                var credential = website.WebsiteCredentials.FirstOrDefault(c => c.isActive);
+                if (credential == null)
+                {
+                    credential = new WebsiteCredentialModel
+                    {
+                        WebsiteId = website.Id,
+                        isActive = true
+                    };
+                    website.WebsiteCredentials.Add(credential);
+                }
+
+                if (!string.IsNullOrWhiteSpace(request.WebsiteUsername))
+                {
+                    credential.WebsiteUsernameFer = _crypto.GetEncryptedText(request.WebsiteUsername);
+                    credential.WebsiteUsernameSha = _sha256.GetHash(request.WebsiteUsername);
+                }
+
+                if (!string.IsNullOrWhiteSpace(request.WebsitePassword))
+                {
+                    credential.WebsitePasswordFer = _crypto.GetEncryptedText(request.WebsitePassword);
+                    credential.WebsitePasswordSha = _sha1.GetHash(request.WebsitePassword);
+                }
+            }
+
+            website.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return new NewWebsiteResponse
+            {
+                Message = "Website credentials updated successfully."
+            };
         }
         catch
         {

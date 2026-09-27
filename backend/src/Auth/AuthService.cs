@@ -55,7 +55,7 @@ public class AuthService
         return await SetUpToken(user.Uuid.ToString());
     }
 
-    private async Task<(string Token, CookieOptions CookieOptions)> SetUpToken(string userId)
+    private async Task<(string Token, CookieOptions CookieOptions)> SetUpToken(string userUuid)
     {
         IConfigurationSection jwtSettings = _config.GetSection("Jwt");
         string jwtKey = _config["JWT_SECRET_KEY"] ??
@@ -66,7 +66,7 @@ public class AuthService
 
         var claims = new[]
         {
-            new Claim(ClaimTypes.Name, userId),
+            new Claim(ClaimTypes.Name, userUuid),
             new Claim(ClaimTypes.Role, "User")
         };
 
