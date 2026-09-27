@@ -3,6 +3,7 @@
 import { Website } from "@/DTO/Website";
 import { useEffect, useState } from "react";
 import { Credential } from "@/DTO/Credential";
+import api from "@/lib/axios";
 
 export default function UpdateWebsiteForm({ websiteId }: { websiteId: string }) {
   const [website, setWebsite] = useState<Website | null>(null);
@@ -48,13 +49,9 @@ export default function UpdateWebsiteForm({ websiteId }: { websiteId: string }) 
 
   // 5. Submit update
   const handleSubmit = async () => {
-    const res = await fetch(`/api/websites/${websiteId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(website),
-    });
+    const res = await api.put(`/api/websites/${websiteId}`, website);
 
-    if (!res.ok) {
+    if (res.status === 200) {
       alert("Error updating website");
       return;
     }
