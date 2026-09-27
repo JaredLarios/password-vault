@@ -4,7 +4,7 @@ import { useState } from "react";
 import type React from "react";
 import { validateLoginForm, LoginErrors } from "@/lib/validations";
 import { loginUser } from "@/lib/loginUser";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
   const router = useRouter();
