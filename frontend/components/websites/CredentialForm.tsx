@@ -16,9 +16,9 @@ export default function CredentialForm({ url, onSubmit }: CredentialFormProps) {
 
     const body = { url, username, password };
 
-    await api.post("/website", body);
+    const response = await api.post<Credential>("/website", body);
 
-    onSubmit(body);
+    onSubmit(response.data);
   };
 
   return (
