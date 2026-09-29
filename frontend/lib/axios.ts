@@ -39,10 +39,13 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+    const isPublicRoute = ["/", "/login", "/users/new"].includes(pathname);
+
     if (
       error.response?.status === 401 &&
       typeof window !== "undefined" &&
-      window.location.pathname !== "/login"
+      !isPublicRoute
     ) {
       window.location.replace("/login");
     }
