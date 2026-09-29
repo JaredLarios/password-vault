@@ -21,4 +21,7 @@ public class WebsiteModel : BaseModel
 
     [ForeignKey(nameof(UserId))]
     public UserModel User { get; set; } = null!;
+
+    public List<WebsiteLinkModel> WebsiteLinks { get; set; } = [];
+    public List<WebsiteCredentialModel> WebsiteCredentials { get; set; } = [];
 }

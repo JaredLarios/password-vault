@@ -19,7 +19,7 @@ As a user, I want to create an account, log in securely, log out, and view my pr
 ```json
 {
   "username": "fabian@example.com",
-  "firstName": "Fabian",
+  "name": "Fabian",
   "lastName": "Betancourt",
   "password": "Password123!"
 }
@@ -96,7 +96,7 @@ The `auth_token` cookie is deleted.
 
 ### Endpoint
 
-- URL: `/User/profile`
+- URL: `/User/me`
 - Method: `GET`
 - Success: `200`
 - Missing or invalid authentication: `401`
@@ -108,9 +108,18 @@ The request does not have a body. The authenticated JWT cookie is required.
 ```json
 {
   "username": "fabian@example.com",
-  "firstName": "Fabian",
+  "name": "Fabian",
   "lastName": "Betancourt"
 }
 ```
 
 The password and internal password hash are never included in the response.
+
+## Credential Payload Encryption
+
+The existing `SecurityMiddleware` decrypts credential fields in JSON `POST`, `PUT`, and `PATCH` request bodies and encrypts matching credential fields in JSON responses.
+
+- Credential fields are identified by property names containing or ending in `Username` or `Password`.
+- The middleware uses `CRYPTO_MIDDLEWARE_SECRET_KEY`; clients must use the same Fernet key to encrypt request values and decrypt response values.
+- Website credentials are additionally encrypted at rest with `CRYPTO_DB_SECRET_KEY`; SHA-256 digests are stored alongside them.
+- Unrelated strings such as website names and URLs are not transformed.

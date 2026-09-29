@@ -1,12 +1,13 @@
-export async function logoutUser() {
-  const response = await fetch("http://localhost:4000/auth/logout", {
-    method: "POST",
-    credentials: "include"
-  });
+import api from "./axios";
+import { notifyAuthChanged } from "./auth";
 
-  if (!response.ok) {
+export async function logoutUser() {
+  const response = await api.post("auth/logout");
+
+  if (response.status !== 200) {
     throw new Error("Logout failed");
   }
 
-  return response.json();
+  notifyAuthChanged();
+  return response.data;
 }

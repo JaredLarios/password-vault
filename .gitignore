@@ -3,3 +3,7 @@
 node_modules
 bin/
 obj/
+backend/obj/
+backend/bin/
+backend.Tests/obj/
+backend.Tests/bin/
