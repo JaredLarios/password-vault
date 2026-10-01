@@ -75,6 +75,20 @@ public class WebsiteService
         return await query.ToListAsync();
     }
 
+    private async Task<List<WebsiteModel>> GetWebsitesByNameAsync(Guid userUuid, string websiteName)
+    {
+        return await _context
+            .Websites
+            .Include(website => website.WebsiteLinks)
+            .Include(website => website.WebsiteCredentials)
+            .Where(website =>
+                    website.User.Uuid == userUuid &&
+                    EF.Functions.ILike(website.WebsiteName, $"%{websiteName}%") &&
+                    website.isActive
+            )
+            .ToListAsync();
+    }
+
     private async Task<WebsiteCredentialModel?> GetWebsiteCredentialByUuid(Guid userUuid, Guid websiteCredentialUuid)
     {
         return await _context
@@ -159,9 +173,15 @@ public class WebsiteService
         }
     }
 
-    public async Task<List<WebsiteListResponse>> GetWebsitesAsync(Guid userUuid, Guid? websiteUuid)
+    public async Task<List<WebsiteListResponse>> GetWebsitesAsync(Guid userUuid, Guid? websiteUuid, string? websiteName)
     {
-        var websites = await GetWebsitesByUserUuidAsync(userUuid, websiteUuid);
+        List<WebsiteModel> websites;
+
+        if (websiteUuid != null && !string.IsNullOrEmpty(websiteName)) throw new ArgumentException("Provide either 'websiteUuid' or 'websiteName', but not both.");
+
+        if (string.IsNullOrEmpty(websiteName)) websites = await GetWebsitesByUserUuidAsync(userUuid, websiteUuid);
+        else websites = await GetWebsitesByNameAsync(userUuid, websiteName);
+        ;
 
         return websites.Select(website => new WebsiteListResponse
         {

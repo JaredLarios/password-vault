@@ -38,7 +38,10 @@ public class WebsiteController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<WebsiteListResponse>>> GetWebsites([FromQuery] Guid? websiteUuid)
+    public async Task<ActionResult<IEnumerable<WebsiteListResponse>>> GetWebsites(
+        [FromQuery] Guid? websiteUuid,
+        [FromQuery] string? websiteName
+    )
     {
         try
         {
@@ -48,7 +51,7 @@ public class WebsiteController : ControllerBase
                 return Unauthorized();
             }
 
-            var websites = await _websiteService.GetWebsitesAsync(userUuid, websiteUuid);
+            var websites = await _websiteService.GetWebsitesAsync(userUuid, websiteUuid, websiteName);
             return Ok(websites);
         }
         catch (ArgumentException ex)
