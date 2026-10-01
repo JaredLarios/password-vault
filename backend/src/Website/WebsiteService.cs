@@ -75,6 +75,16 @@ public class WebsiteService
         return await query.ToListAsync();
     }
 
+    private async Task<WebsiteCredentialModel?> GetWebsiteCredentialByUuid(Guid userUuid, Guid websiteCredentialUuid)
+    {
+        return await _context
+            .WebsiteCredentials
+            .Where(credential =>
+                credential.Uuid == websiteCredentialUuid &&
+                credential.Website.User.Uuid == userUuid
+            )
+            .FirstOrDefaultAsync();
+    }
 
     private WebsiteLinkModel CreateWebsiteLink(string websiteUrl)
     {
@@ -250,4 +260,16 @@ public class WebsiteService
             throw;
         }
     }
+
+    public async Task<NewWebsiteResponse> DeleteWebsiteCredentialAsync(Guid userUuid, Guid credentialUuid)
+    {
+        WebsiteCredentialModel? credential = await GetWebsiteCredentialByUuid(userUuid, credentialUuid);
+        if (credential == null) throw new ArgumentException("Website credential do not found.");
+
+        _context.WebsiteCredentials.Remove(credential);
+
+        await _context.SaveChangesAsync();
+        return new NewWebsiteResponse { Message = "Credentials deleted successfully" };
+    }
+
 }
