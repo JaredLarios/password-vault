@@ -29,6 +29,8 @@ string middlewareKey = builder.Configuration["CRYPTO_MIDDLEWARE_SECRET_KEY"]
 
 IConfigurationSection jwtSettings = builder.Configuration.GetSection("JWT");
 
+IConfigurationSection pwdServiceSettings = builder.Configuration.GetSection("PasswordLeakService");
+
 // Add services to the container.
 builder.Services.AddCors(options =>
     options.AddDefaultPolicy(
@@ -42,6 +44,23 @@ builder.Services.AddCors(options =>
                 .AllowCredentials();
         })
 );
+
+builder.Services.AddHttpClient("PasswordLeakClient", client =>
+{
+    string? passwordLeakServiceUrl = pwdServiceSettings["Url"];
+    int? passwordLeakServiceTimeout = int.TryParse(pwdServiceSettings["Timeout"], out var timeout)
+        ? timeout
+        : null;
+
+    if (string.IsNullOrWhiteSpace(passwordLeakServiceUrl) || passwordLeakServiceTimeout == null)
+        throw new InvalidOperationException("Password leak service URL is not configured.");
+
+    client.BaseAddress = new Uri(passwordLeakServiceUrl);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+
+    client.Timeout = TimeSpan.FromSeconds(passwordLeakServiceTimeout.Value);
+});
+
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(dbConnectionString)
