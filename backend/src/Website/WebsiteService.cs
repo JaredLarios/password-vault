@@ -13,15 +13,18 @@ public class WebsiteService
     private readonly ICrypto _crypto;
     private readonly IHash _sha256;
     private readonly IHash _sha1;
+    private readonly IHttpClientFactory _client;
 
     public WebsiteService(
         AppDbContext context,
+        IHttpClientFactory client,
         [FromKeyedServices("services")] ICrypto crypto,
         [FromKeyedServices("sha256")] IHash sha256,
         [FromKeyedServices("sha1")] IHash sha1
     )
     {
         _context = context;
+        _client = client;
         _crypto = crypto;
         _sha256 = sha256;
         _sha1 = sha1;
@@ -84,6 +87,14 @@ public class WebsiteService
                 credential.Website.User.Uuid == userUuid
             )
             .FirstOrDefaultAsync();
+    }
+
+    public async Task<string> GetPasswordSecurity()
+    {
+        var clientService = _client.CreateClient("PasswordLeakClient");
+        string response = await clientService.GetStringAsync("/range/21BD1");
+
+        return response;
     }
 
     private WebsiteLinkModel CreateWebsiteLink(string websiteUrl)
