@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { getCurrentUser } from "@/lib/getCurrentUser";
 import { UserResponseDto } from "@/DTO/UserDto";
+import Link from "next/link";
+
 
 export default function DashboardPage() {
-  const router = useRouter();
   const [user, setUser] = useState<UserResponseDto|null>(null);
 
   useEffect(() => {
@@ -14,7 +14,9 @@ export default function DashboardPage() {
       const data = await getCurrentUser();
 
       if (!data) {
-        router.push("/login");
+        if (typeof window !== "undefined") {
+          window.location.href = "/login";
+        }
         return;
       }
 
@@ -22,7 +24,7 @@ export default function DashboardPage() {
     }
 
     loadUser();
-  }, [router]);
+  }, []);
 
   if (!user) {
     return <p className="p-6 text-gray-600">Loading your dashboard...</p>;
@@ -45,6 +47,15 @@ export default function DashboardPage() {
         <p className="text-gray-600">
           This is where your saved passwords will appear once your vault is connected.
         </p>
+      </section>
+      <section className="mt-6 bg-white shadow p-4 rounded border">
+        <h2 className="text-xl font-semibold mb-2">Account Settings</h2>
+        <p className="text-gray-600">
+          Manage your account settings, including changing your password.
+        </p>
+        <Link href="/users/change-password" className="text-blue-600 hover:underline">
+          Change Password
+        </Link>
       </section>
     </main>
   );
