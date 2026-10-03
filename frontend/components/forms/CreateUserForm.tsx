@@ -4,10 +4,8 @@ import { useState } from "react";
 import { Errors, validateUserForm } from "../validations";
 import { createUser } from "../../lib/createUser";
 import { NewUserDto } from "@/DTO/UserDto";
-import { useRouter } from "next/navigation";
 
 export default function CreateUserForm() {
-  const router = useRouter();
   const [formData, setFormData] = useState({
       username: "",
       name: "",
@@ -34,7 +32,7 @@ export default function CreateUserForm() {
     try {
       await createUser(formData as NewUserDto);
       setSuccess("User created successfully!");
-      router.replace("/login");
+      window.location.replace("/login");
     } catch (err) {
       setErrors({ api: "Failed to create user. Try again." });
     }

@@ -26,6 +26,7 @@ export default function WebsitesPage() {
     websiteUsername: "",
     websitePassword: "",
   });
+  const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
   const [createSuccess, setCreateSuccess] = useState("");
@@ -33,24 +34,38 @@ export default function WebsitesPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    let cancelled = false;
+    const controller = new AbortController();
 
-    api
-      .get<WebsiteSummary[]>("/website/")
-      .then(({ data }) => {
-        if (!cancelled) setWebsites(data);
-      })
-      .catch(() => {
-        if (!cancelled) setError("Unable to load your websites. Please try again.");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+    const timer = setTimeout(async () => {
+      try {
+        setLoading(true);
+
+        const params =
+          query.trim().length > 0
+            ? { websiteName: query.trim() }
+            : undefined;
+
+        const response = await api.get<WebsiteSummary[]>("/website",
+          {
+            params,
+            signal: controller.signal,
+          }
+        );
+
+        
+        setWebsites(response.data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    }, 500);
 
     return () => {
-      cancelled = true;
+      clearTimeout(timer);
+      controller.abort();
     };
-  }, []);
+  }, [query]);
 
   function togglePassword(key: string) {
     setVisiblePasswords((current) => ({
@@ -180,6 +195,13 @@ export default function WebsitesPage() {
       )}
 
       <div className="space-y-4">
+        <input
+          type="text"
+          placeholder="Search websites..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="border p-2 w-full rounded"
+        />
         {websites.map((website, websiteIndex) => (
           <article
             key={website.websiteUuid ?? `${website.websiteName}-${websiteIndex}`}
