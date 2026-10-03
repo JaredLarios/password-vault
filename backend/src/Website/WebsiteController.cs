@@ -64,25 +64,6 @@ public class WebsiteController : ControllerBase
         }
     }
 
-    [HttpGet("Password")]
-    public async Task<ActionResult<int>> TestPasswordSec([FromQuery] string passwordHash)
-    {
-        try
-        {
-            var websites = await _websiteService.GetPasswordSecurity(passwordHash);
-            return Ok(websites);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-        catch (Exception exp)
-        {
-            Console.WriteLine(exp.Message);
-            return StatusCode(500, new { message = "An unexpected error occurred." });
-        }
-    }
-
     [HttpPut("{websiteUuid:guid}")]
     public async Task<ActionResult<NewWebsiteResponse>> UpdateWebsite(
         [FromRoute] Guid websiteUuid,

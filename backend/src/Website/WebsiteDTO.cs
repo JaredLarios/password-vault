@@ -48,6 +48,7 @@ public class WebsiteListCredentialResponse
     public Guid WebsiteUserId { get; set; }
     public string WebsiteUsername { get; set; } = string.Empty;
     public string WebsitePassword { get; set; } = string.Empty;
+    public int? WebsitePwdLakedCount { get; set; } = null;
 }
 
 public class WebsiteListResponse

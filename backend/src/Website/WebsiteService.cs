@@ -103,7 +103,7 @@ public class WebsiteService
             .FirstOrDefaultAsync();
     }
 
-    public async Task<int> GetPasswordSecurity(string passwordHash)
+    private async Task<int> GetPasswordSecurity(string passwordHash)
     {
         string firstFiveChars = passwordHash[..5];
         string remainingChars = passwordHash[5..].ToLower();
@@ -146,7 +146,7 @@ public class WebsiteService
         };
     }
 
-    private WebsiteCredentialModel CreateNewCredential(NewWebsiteDTO newWebsite)
+    private WebsiteCredentialModel CreateNewCredential(NewWebsiteDTO newWebsite, int? count)
     {
         return new WebsiteCredentialModel
         {
@@ -154,7 +154,8 @@ public class WebsiteService
             WebsiteUsernameFer = _crypto.GetEncryptedText(newWebsite.WebsiteUsername),
             WebsiteUsernameSha = _sha256.GetHash(newWebsite.WebsiteUsername),
             WebsitePasswordFer = _crypto.GetEncryptedText(newWebsite.WebsitePassword),
-            WebsitePasswordSha = _sha1.GetHash(newWebsite.WebsitePassword)
+            WebsitePasswordSha = _sha1.GetHash(newWebsite.WebsitePassword),
+            WebsitePasswordLeakedCount = count
         };
     }
 
@@ -166,6 +167,9 @@ public class WebsiteService
 
         UserModel? user = await GetUserByUuidAsync(userUuid);
         if (user == null) throw new KeyNotFoundException("User not found");
+
+        string passwordHash = _sha1.GetHash(newWebsite.WebsitePassword);
+        int? passwordLeakedCount = await GetPasswordSecurity(passwordHash);
 
         await using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -183,7 +187,9 @@ public class WebsiteService
                 website = existingWebsite;
             }
 
-            website.WebsiteCredentials = new List<WebsiteCredentialModel> { CreateNewCredential(newWebsite) };
+            website.WebsiteCredentials = new List<WebsiteCredentialModel> {
+                CreateNewCredential(newWebsite, passwordLeakedCount)
+            };
 
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
@@ -221,7 +227,8 @@ public class WebsiteService
                 {
                     WebsiteUserId = credential.Uuid,
                     WebsiteUsername = _crypto.GetDecryptedText(credential.WebsiteUsernameFer),
-                    WebsitePassword = _crypto.GetDecryptedText(credential.WebsitePasswordFer)
+                    WebsitePassword = _crypto.GetDecryptedText(credential.WebsitePasswordFer),
+                    WebsitePwdLakedCount = credential.WebsitePasswordLeakedCount
                 })
                 .ToList()
         }).ToList();
@@ -230,8 +237,16 @@ public class WebsiteService
     public async Task<NewWebsiteResponse> UpdateWebsiteAsync(Guid userUuid, Guid websiteUuid, UpdateWebsiteDTO request)
     {
         ArgumentNullException.ThrowIfNull(request);
+        string passwordHash = string.Empty;
+        int? passwordLeakedCount = null;
 
         var website = await GetWebsiteByUuidAsync(userUuid, websiteUuid);
+
+        if (!string.IsNullOrWhiteSpace(request.WebsitePassword))
+        {
+            passwordHash = _sha1.GetHash(request.WebsitePassword);
+            passwordLeakedCount = await GetPasswordSecurity(passwordHash);
+        }
 
         await using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -285,7 +300,8 @@ public class WebsiteService
                 if (!string.IsNullOrWhiteSpace(request.WebsitePassword))
                 {
                     credential.WebsitePasswordFer = _crypto.GetEncryptedText(request.WebsitePassword);
-                    credential.WebsitePasswordSha = _sha1.GetHash(request.WebsitePassword);
+                    credential.WebsitePasswordSha = passwordHash;
+                    credential.WebsitePasswordLeakedCount = passwordLeakedCount;
                 }
             }
 
