@@ -101,6 +101,63 @@ public class AuthTests
     }
 
     [Fact]
+    public async Task AuthController_ChangePasswordUpdatesAuthenticatedUserPassword()
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        using var context = new AppDbContext(options);
+        var argon2 = new Argon2Repository();
+        var user = new UserModel
+        {
+            UsernameSha = new Sha256Repository().GetHash("user@example.com"),
+            Password = argon2.GetHash("oldpassword"),
+            isActive = true
+        };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var service = new AuthService(
+            CreateConfiguration(includeSecret: true),
+            context,
+            argon2,
+            new Sha256Repository());
+        var controller = new AuthController(service);
+        var httpContext = new DefaultHttpContext();
+        httpContext.User = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim(ClaimTypes.Name, user.Uuid.ToString())],
+            "Test"));
+        controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
+
+        IActionResult action = await controller.ChangePassword(new NewPasswordDTO
+        {
+            NewPassword = "newpassword1"
+        });
+
+        var result = Assert.IsType<OkObjectResult>(action);
+        Assert.Equal("Password updated Successfully", GetMessage(result.Value));
+        Assert.True(argon2.CompareHash("newpassword1", context.Users.Single().Password));
+        Assert.False(argon2.CompareHash("oldpassword", context.Users.Single().Password));
+    }
+
+    [Fact]
+    public async Task AuthController_ChangePasswordReturnsBadRequestForInvalidPasswordLength()
+    {
+        var controller = CreateController(includeSecret: true);
+        controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim(ClaimTypes.Name, Guid.NewGuid().ToString())],
+            "Test"));
+
+        IActionResult action = await controller.ChangePassword(new NewPasswordDTO
+        {
+            NewPassword = "short"
+        });
+
+        var result = Assert.IsType<BadRequestObjectResult>(action);
+        Assert.Equal("Password must be between 10 and 15 characters.", GetMessage(result.Value));
+    }
+
+    [Fact]
     public void AuthController_LogoutDeletesCookie()
     {
         var controller = CreateController(includeSecret: true);

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PasswordVaultAPI.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bb60685d284457c79af7346320ff1650398bc413")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+98b72978316785f86d8c5594bd713a7d5d1db9b2")]
 [assembly: System.Reflection.AssemblyProductAttribute("PasswordVaultAPI.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PasswordVaultAPI.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
