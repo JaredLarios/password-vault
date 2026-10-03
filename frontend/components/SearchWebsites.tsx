@@ -1,5 +1,6 @@
 "use client";
 
+import api from "@/lib/axios";
 import { useState, useEffect } from "react";
 
 export default function SearchWebsites() {
@@ -17,9 +18,9 @@ export default function SearchWebsites() {
     const delay = setTimeout(async () => {
       setLoading(true);
 
-        try {
-        const res = await fetch(`/api/websites/search?query=${query}`);
-        const data = await res.json();
+      try {
+        const res = await api.get(`/website?websiteName=${query}`);
+        const data = await res.data;
         setResults(data);
       } catch (err) {
         console.error("Search failed:", err);
