@@ -103,12 +103,25 @@ public class WebsiteService
             .FirstOrDefaultAsync();
     }
 
-    public async Task<string> GetPasswordSecurity()
+    public async Task<int> GetPasswordSecurity(string passwordHash)
     {
-        var clientService = _client.CreateClient("PasswordLeakClient");
-        string response = await clientService.GetStringAsync("/range/21BD1");
+        string firstFiveChars = passwordHash[..5];
+        string remainingChars = passwordHash[5..].ToLower();
 
-        return response;
+        var clientService = _client.CreateClient("PasswordLeakClient");
+        string response = await clientService.GetStringAsync($"/range/{firstFiveChars}");
+
+        string? matchingLine = response
+            .ToLower()
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => line.Trim())
+            .FirstOrDefault(line => line.StartsWith($"{remainingChars}:"));
+
+        if (matchingLine == null) return 0;
+
+        string passwordCount = matchingLine.Split(":")[1];
+
+        return int.Parse(passwordCount);
     }
 
     private WebsiteLinkModel CreateWebsiteLink(string websiteUrl)
