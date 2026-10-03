@@ -62,11 +62,11 @@ public class WebsiteController : ControllerBase
     }
 
     [HttpGet("Password")]
-    public async Task<ActionResult<string>> TestPasswordSec([FromQuery] Guid? websiteUuid)
+    public async Task<ActionResult<int>> TestPasswordSec([FromQuery] string passwordHash)
     {
         try
         {
-            var websites = await _websiteService.GetPasswordSecurity();
+            var websites = await _websiteService.GetPasswordSecurity(passwordHash);
             return Ok(websites);
         }
         catch (ArgumentException ex)
