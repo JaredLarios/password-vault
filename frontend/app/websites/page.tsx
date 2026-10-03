@@ -33,26 +33,6 @@ export default function WebsitesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // useEffect(() => {
-  //   let cancelled = false;
-
-  //   api
-  //     .get<WebsiteSummary[]>("/website/")
-  //     .then(({ data }) => {
-  //       if (!cancelled) setWebsites(data);
-  //     })
-  //     .catch(() => {
-  //       if (!cancelled) setError("Unable to load your websites. Please try again.");
-  //     })
-  //     .finally(() => {
-  //       if (!cancelled) setLoading(false);
-  //     });
-
-  //   return () => {
-  //     cancelled = true;
-  //   };
-  // }, []);
-
   useEffect(() => {
     const controller = new AbortController();
 
