@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace PasswordVault.Auth;
 
@@ -24,6 +25,33 @@ public class AuthController : ControllerBase
             return Ok(new AuthMessageResponseDTO
             {
                 Message = "Logged in successfully"
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new AuthMessageResponseDTO { Message = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new AuthMessageResponseDTO
+            {
+                Message = "An unexpected error occurred."
+            });
+        }
+    }
+
+    [Authorize]
+    [HttpPut("new-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] NewPasswordDTO request)
+    {
+        try
+        {
+            if (!Guid.TryParse(User.Identity?.Name, out var userUuid)) return Unauthorized();
+
+            await _authService.ChangePasswordAsync(userUuid, request.NewPassword);
+            return Ok(new AuthMessageResponseDTO
+            {
+                Message = "Password updated Successfully"
             });
         }
         catch (ArgumentException ex)

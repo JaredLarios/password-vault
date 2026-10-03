@@ -55,6 +55,24 @@ public class AuthService
         return await SetUpToken(user.Uuid.ToString());
     }
 
+    public async Task ChangePasswordAsync(Guid userUuid, string newPassword)
+    {
+        if (string.IsNullOrWhiteSpace(newPassword) ||
+            newPassword.Length < 10 ||
+            newPassword.Length > 15)
+        {
+            throw new ArgumentException("Password must be between 10 and 15 characters.");
+        }
+
+        UserModel? user = await _context.Users
+            .FirstOrDefaultAsync(user => user.Uuid == userUuid && user.isActive);
+
+        if (user == null) throw new ArgumentException("User not found.");
+
+        user.Password = _argon2.GetHash(newPassword);
+        await _context.SaveChangesAsync();
+    }
+
     private async Task<(string Token, CookieOptions CookieOptions)> SetUpToken(string userUuid)
     {
         IConfigurationSection jwtSettings = _config.GetSection("Jwt");
