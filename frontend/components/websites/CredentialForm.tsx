@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Credential } from "@/DTO/Credential";
 import api from "@/lib/axios";
+import PasswordStrengthMeter from "@/components/PasswordStrengthMeter";
 
 interface CredentialFormProps {
   url: string;
@@ -39,6 +40,7 @@ export default function CredentialForm({ url, onSubmit }: CredentialFormProps) {
         onChange={(e) => setPassword(e.target.value)}
         required
       />
+      <PasswordStrengthMeter password={password} />
 
       <button
         className="bg-green-600 text-white px-3 py-1 rounded"

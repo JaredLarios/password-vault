@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import api from "@/lib/axios";
 import { router } from "next/client";
 import { useRouter } from "next/navigation";
+import PasswordStrengthMeter from "@/components/PasswordStrengthMeter";
 
 interface WebsiteResponse {
   websiteName: string;
@@ -172,6 +173,7 @@ export default function UpdateWebsiteForm({ websiteId }: { websiteId: string }) 
               readOnly={index > 0}
               onChange={(event) => updateCredential(index, "password", event.target.value)}
             />
+            {index === 0 && <PasswordStrengthMeter password={credential.password} />}
           </div>
         ))}
       </section>

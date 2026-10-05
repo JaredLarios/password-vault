@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import api from "@/lib/axios";
+import PasswordStrengthMeter from "@/components/PasswordStrengthMeter";
 
 interface WebsiteCredential {
   websiteUserId: string;
@@ -180,6 +181,7 @@ export default function WebsitesPage() {
               value={createForm.websitePassword}
               onChange={(event) => setCreateForm({ ...createForm, websitePassword: event.target.value })}
             />
+            <PasswordStrengthMeter password={createForm.websitePassword} />
           </div>
 
           <button type="submit" className="m-0 w-auto" disabled={creating}>

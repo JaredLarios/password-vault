@@ -2,6 +2,7 @@
 
 // Form component for changing a user's password
 import { useState } from "react";
+import PasswordStrengthMeter from "@/components/PasswordStrengthMeter";
 
 export default function ChangePasswordForm() {
     const [currentPassword, setCurrentPassword] = useState("");
@@ -43,6 +44,7 @@ export default function ChangePasswordForm() {
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
             />
+            <PasswordStrengthMeter password={newPassword} />
             <button
                 type="submit"
                 className="bg-blue-600 text-white px-4 py-2 rounded"

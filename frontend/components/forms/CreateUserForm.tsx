@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Errors, validateUserForm } from "../validations";
 import { createUser } from "../../lib/createUser";
 import { NewUserDto } from "@/DTO/UserDto";
+import PasswordStrengthMeter from "@/components/PasswordStrengthMeter";
 
 export default function CreateUserForm() {
   const [formData, setFormData] = useState({
@@ -80,6 +81,7 @@ export default function CreateUserForm() {
         onChange={handleChange}
       />
       {errors.password && <p className="error">{errors.password}</p>}
+      <PasswordStrengthMeter password={formData.password} />
 
       <label>Confirm Password</label>
       <input
