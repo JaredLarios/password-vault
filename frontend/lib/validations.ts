@@ -35,13 +35,13 @@ export function validateUserForm(data: {
     return errors;
 }
 
-export function validateLoginForm(data: { username: string; password: string }) {
-  const errors: any = {};
+export function validateLoginForm(data: { username: string; password: string }): LoginErrors {
+  const errors: LoginErrors = {};
 
   if (!data.username.trim()) {
-    errors.username = "Email is required.";
+    errors.email = "Email is required.";
   } else if (!data.username.includes("@")) {
-    errors.username = "Valid email is required.";
+    errors.email = "Valid email is required.";
   }
 
   if (!data.password.trim()) {

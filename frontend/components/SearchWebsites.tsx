@@ -3,25 +3,30 @@
 import api from "@/lib/axios";
 import { useState, useEffect } from "react";
 
+interface WebsiteSearchResult {
+  websiteId: string;
+  websiteName: string;
+  urls: string[];
+}
+
 export default function SearchWebsites() {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<WebsiteSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
 
-    // Search for websites when the query changes
+  // Search for websites when the query changes
   useEffect(() => {
-    if (!query) {
-      setResults([]);
-      return;
-    }
-
     const delay = setTimeout(async () => {
+      if (!query) {
+        setResults([]);
+        return;
+      }
+
       setLoading(true);
 
       try {
         const res = await api.get(`/website?websiteName=${query}`);
-        const data = await res.data;
-        setResults(data);
+        setResults(res.data);
       } catch (err) {
         console.error("Search failed:", err);
       }
@@ -47,8 +52,8 @@ export default function SearchWebsites() {
       {results.length > 0 && (
         <ul className="border rounded p-3 space-y-2">
           {results.map((site) => (
-            <li key={site.id} className="border-b pb-2">
-              <p className="font-semibold">{site.name}</p>
+            <li key={site.websiteId} className="border-b pb-2">
+              <p className="font-semibold">{site.websiteName}</p>
               <ul className="ml-4 list-disc">
                 {site.urls.map((u: string, i: number) => (
                   <li key={i}>{u}</li>
@@ -65,6 +70,3 @@ export default function SearchWebsites() {
     </div>
   );
 }
-
-
-
