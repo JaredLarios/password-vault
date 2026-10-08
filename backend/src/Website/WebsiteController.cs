@@ -38,7 +38,10 @@ public class WebsiteController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<WebsiteListResponse>>> GetWebsites([FromQuery] Guid? websiteUuid)
+    public async Task<ActionResult<IEnumerable<WebsiteListResponse>>> GetWebsites(
+        [FromQuery] Guid? websiteUuid,
+        [FromQuery] string? websiteName
+    )
     {
         try
         {
@@ -48,7 +51,7 @@ public class WebsiteController : ControllerBase
                 return Unauthorized();
             }
 
-            var websites = await _websiteService.GetWebsitesAsync(userUuid, websiteUuid);
+            var websites = await _websiteService.GetWebsitesAsync(userUuid, websiteUuid, websiteName);
             return Ok(websites);
         }
         catch (ArgumentException ex)
@@ -75,6 +78,32 @@ public class WebsiteController : ControllerBase
             }
 
             var response = await _websiteService.UpdateWebsiteAsync(userUuid, websiteUuid, request);
+            return Ok(response);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { message = "An unexpected error occurred." });
+        }
+    }
+
+    [HttpDelete("{credentialUuid:guid}")]
+    public async Task<ActionResult<NewWebsiteResponse>> DeleteWebsiteCredential(
+        [FromRoute] Guid credentialUuid
+    )
+    {
+        try
+        {
+            var userUuidValue = User.Identity?.Name;
+            if (!Guid.TryParse(userUuidValue, out var userUuid))
+            {
+                return Unauthorized();
+            }
+
+            var response = await _websiteService.DeleteWebsiteCredentialAsync(userUuid, credentialUuid);
             return Ok(response);
         }
         catch (ArgumentException ex)

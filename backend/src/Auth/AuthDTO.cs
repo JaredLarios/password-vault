@@ -14,6 +14,13 @@ public class AuthDTO
     public string Password { get; set; } = string.Empty;
 }
 
+public class NewPasswordDTO
+{
+    [Required]
+    [StringLength(15, MinimumLength = 10)]
+    public string NewPassword { get; set; } = string.Empty;
+}
+
 public class AuthMessageResponseDTO
 {
     public string Message { get; set; } = string.Empty;

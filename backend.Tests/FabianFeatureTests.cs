@@ -6,7 +6,7 @@ using PasswordVault.Common.Database;
 using PasswordVault.Common.Models;
 using PasswordVault.Common.Repositories;
 using PasswordVault.Users;
-using PasswordVault.Websites;
+using PasswordVault.Website;
 
 namespace PasswordVaultAPI.Tests;
 
