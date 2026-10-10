@@ -13,7 +13,11 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PasswordVaultAPI.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
+<<<<<<< Updated upstream
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+98b72978316785f86d8c5594bd713a7d5d1db9b2")]
+=======
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5149bdce3ed3cff98e44e48a530175e4ebe0e1b5")]
+>>>>>>> Stashed changes
 [assembly: System.Reflection.AssemblyProductAttribute("PasswordVaultAPI.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PasswordVaultAPI.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
