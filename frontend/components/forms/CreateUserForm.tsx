@@ -33,64 +33,87 @@ export default function CreateUserForm() {
       await createUser(formData as NewUserDto);
       setSuccess("User created successfully!");
       window.location.replace("/login");
-    } catch (err) {
+    } catch {
       setErrors({ api: "Failed to create user. Try again." });
     }
   }
 
   return (
-    <form className="create-user-form" onSubmit={handleSubmit}>
-      <h2>Create New User</h2>
+    <form className="create-user-form grid grid-cols-1 gap-x-5 gap-y-2 sm:grid-cols-2" onSubmit={handleSubmit}>
+      <h2 className="col-span-full text-xl font-semibold">Create New User</h2>
 
-      {success && <p className="success">{success}</p>}
-      {errors.api && <p className="error">{errors.api}</p>}
+      {success && <p className="success col-span-full">{success}</p>}
+      {errors.api && <p className="error col-span-full">{errors.api}</p>}
 
-      <label>Name</label>
-      <input
-        name="name"
-        type="name"
-        value={formData.name}
-        onChange={handleChange}
-      />
-      {errors.name && <p className="error">{errors.name}</p>}
+      <div>
+        <label htmlFor="name">Name</label>
+        <input
+          id="name"
+          name="name"
+          autoComplete="given-name"
+          value={formData.name}
+          onChange={handleChange}
+          required
+        />
+        {errors.name && <p className="error mt-1 text-sm">{errors.name}</p>}
+      </div>
 
-      <label>Last Name</label>
-      <input
-        name="lastName"
-        type="lastName"
-        value={formData.lastName}
-        onChange={handleChange}
-      />
-      {errors.lastName && <p className="error">{errors.lastName}</p>}
+      <div>
+        <label htmlFor="lastName">Last Name</label>
+        <input
+          id="lastName"
+          name="lastName"
+          autoComplete="family-name"
+          value={formData.lastName}
+          onChange={handleChange}
+          required
+        />
+        {errors.lastName && <p className="error mt-1 text-sm">{errors.lastName}</p>}
+      </div>
 
-      <label>Email</label>
-      <input
-        name="username"
-        type="email"
-        value={formData.username}
-        onChange={handleChange}
-      />
-      {errors.username && <p className="error">{errors.username}</p>}
+      <div className="sm:col-span-full">
+        <label htmlFor="username">Email</label>
+        <input
+          id="username"
+          name="username"
+          type="email"
+          autoComplete="email"
+          value={formData.username}
+          onChange={handleChange}
+          required
+        />
+        {errors.username && <p className="error mt-1 text-sm">{errors.username}</p>}
+      </div>
 
-      <label>Password</label>
-      <input
-        type="password"
-        name="password"
-        value={formData.password}
-        onChange={handleChange}
-      />
-      {errors.password && <p className="error">{errors.password}</p>}
+      <div>
+        <label htmlFor="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          name="password"
+          autoComplete="new-password"
+          value={formData.password}
+          onChange={handleChange}
+          required
+        />
+        {errors.password && <p className="error mt-1 text-sm">{errors.password}</p>}
+      </div>
 
-      <label>Confirm Password</label>
-      <input
-        type="password"
-        name="confirmPassword"
-        value={formData.confirmPassword}
-        onChange={handleChange}
-      />
-      {errors.confirmPassword && <p className="error">{errors.confirmPassword}</p>}
+      <div>
+        <label htmlFor="confirmPassword">Confirm Password</label>
+        <input
+          id="confirmPassword"
+          type="password"
+          name="confirmPassword"
+          autoComplete="new-password"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          required
+        />
+        {errors.confirmPassword && <p className="error mt-1 text-sm">{errors.confirmPassword}</p>}
+      </div>
 
-      <button type="submit">Create User</button>
+      <button className="col-span-full mt-2 w-full" type="submit">Create User</button>
     </form>
   );
 }

@@ -3,32 +3,12 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { logoutUser } from "@/lib/logoutUser";
-import { authChangeEvent } from "@/lib/auth";
-import { getCurrentUser } from "@/lib/getCurrentUser";
-import { useEffect, useState } from "react";
+import { useIsAuthenticated } from "@/components/AuthProvider";
 
 export default function NavBar() {
   const pathname = usePathname();
   const router = useRouter();
-  const [loggedIn, setLoggedIn] = useState(false);
-
-  useEffect(() => {
-    let isActive = true;
-
-    function checkAuthentication() {
-      void getCurrentUser().then((user) => {
-        if (isActive) setLoggedIn(user !== null);
-      });
-    }
-
-    checkAuthentication();
-    window.addEventListener(authChangeEvent, checkAuthentication);
-
-    return () => {
-      isActive = false;
-      window.removeEventListener(authChangeEvent, checkAuthentication);
-    };
-  }, []);
+  const loggedIn = useIsAuthenticated();
 
   if (pathname === "/login" || !loggedIn) return null;
 
@@ -47,7 +27,7 @@ export default function NavBar() {
   }
 
   return (
-    <nav className="flex gap-4 p-4 bg-gray-100 border-b">
+    <nav className="flex flex-wrap items-center gap-2 border-b border-border bg-surface px-4 py-3 sm:px-6">
       {links.map((link) => {
         const isActive = pathname === link.href;
 
@@ -55,10 +35,10 @@ export default function NavBar() {
           <Link
             key={link.href}
             href={link.href}
-            className={`px-3 py-1 rounded ${
+            className={`rounded-md px-3 py-2 text-sm font-medium ${
               isActive
-                ? "bg-blue-600 text-white"
-                : "text-blue-700 hover:bg-blue-200"
+                ? "nav-link-active"
+                : "nav-link-inactive"
             }`}
           >
             {link.label}
@@ -69,7 +49,7 @@ export default function NavBar() {
       {/* Logout Button */}
       <button
         onClick={handleLogout}
-        className="logout-btn px-3 py-1 rounded text-red-600 hover:bg-red-200"
+        className="logout-btn ml-auto rounded-md px-3 py-2 text-sm font-medium"
       >
         Logout
       </button>

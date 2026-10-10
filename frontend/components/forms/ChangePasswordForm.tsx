@@ -1,53 +1,79 @@
 "use client";
 
-// Form component for changing a user's password
 import { useState } from "react";
+import axios from "axios";
+import { changePassword } from "@/lib/changePassword";
 
 export default function ChangePasswordForm() {
-    const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
+    const [submitting, setSubmitting] = useState(false);
 
-        // Function to handle form submission
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        const payload = {
-            currentPassword,
-            newPassword
-        };
-        // Send the API request to change the password
-        const res = await fetch("/api/password/change", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        console.log(data);
+
+        setError("");
+        setSuccess("");
+
+        if (newPassword.length < 10 || newPassword.length > 15) {
+            setError("Password must be between 10 and 15 characters.");
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            setError("Passwords do not match.");
+            return;
+        }
+
+        setSubmitting(true);
+        try {
+            const response = await changePassword(newPassword);
+            setSuccess(response.message || "Password updated successfully.");
+            setNewPassword("");
+            setConfirmPassword("");
+        } catch (requestError) {
+            const message = axios.isAxiosError<{ message?: string }>(requestError)
+                ? requestError.response?.data?.message
+                : undefined;
+            setError(message || "Unable to update your password. Please try again.");
+        } finally {
+            setSubmitting(false);
+        }
     }
 
     return (
         <form className="space-y-4" onSubmit={handleSubmit}>
             <h2 className="text-xl font-bold">Change Password</h2>
-            <input
-                className="border p-2 w-full"
-                type="password"
-                placeholder="Current Password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                required
-            />
+            {error && <p role="alert" className="text-danger">{error}</p>}
+            {success && <p role="status" className="text-success">{success}</p>}
             <input
                 className="border p-2 w-full"
                 type="password"
                 placeholder="New Password"
+                minLength={10}
+                maxLength={15}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
             />
+            <input
+                className="border p-2 w-full"
+                type="password"
+                placeholder="Confirm New Password"
+                minLength={10}
+                maxLength={15}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+            />
             <button
                 type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded"
+                className="rounded-md bg-accent px-4 py-2 text-accent-contrast hover:bg-accent-hover"
+                disabled={submitting}
             >
-                Update Password
+                {submitting ? "Updating..." : "Update Password"}
             </button>
         </form>
     );

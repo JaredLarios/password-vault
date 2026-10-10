@@ -1,6 +1,9 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import Script from "next/script";
+import { AuthProvider } from "@/components/AuthProvider";
 import NavBar from "@/components/NavBar/NavBar";
+import SiteHeader from "@/components/SiteHeader";
 
 export const metadata: Metadata = {
   title: "Password Vault",
@@ -13,19 +16,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="min-h-screen bg-gray-100 text-gray-900">
-        <header className="bg-blue-600 text-white p-4">
-          <h1 className="text-xl font-bold">Password Vault</h1>
-        </header>
+    <html lang="en" suppressHydrationWarning>
+      <body className="flex min-h-screen flex-col bg-background text-foreground">
+        <Script id="theme-init" strategy="beforeInteractive">
+          {`try { const theme = localStorage.getItem("password-vault-theme"); if (theme === "dark" || theme === "light") document.documentElement.dataset.theme = theme; } catch {}`}
+        </Script>
+        <AuthProvider>
+          <SiteHeader />
 
-        <NavBar />
+          <NavBar />
 
-        <main className="p-6">{children}</main>
+          <div className="mx-auto flex w-full max-w-6xl flex-1 px-4 py-5 sm:px-6 sm:py-6 lg:py-8">
+            {children}
+          </div>
 
-        <footer className="bg-gray-800 text-white p-4 text-center mt-10">
-          <p>© 2026 Password Vault</p>
-        </footer>
+          <footer className="site-footer">
+            <p>© 2026 Password Vault</p>
+          </footer>
+        </AuthProvider>
       </body>
     </html>
   );

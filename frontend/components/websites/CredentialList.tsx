@@ -43,7 +43,7 @@ export default function CredentialList({
               type="button"
               aria-label={revealedIds.has(i) ? "Hide password" : "Show password"}
               onClick={() => toggleReveal(i)}
-              className="text-sm text-purple-600"
+              className="text-sm text-accent"
             >
               {revealedIds.has(i) ? "🙈" : "👁"}
             </button>
@@ -61,7 +61,7 @@ export default function CredentialList({
         />
       ) : (
         <button
-          className="mt-2 bg-purple-600 text-white px-3 py-1 rounded"
+          className="mt-2 rounded-md bg-accent px-3 py-1 text-accent-contrast hover:bg-accent-hover"
           onClick={() => setShowForm(true)}
         >
           Add Credential

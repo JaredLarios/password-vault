@@ -22,7 +22,7 @@ export default function CredentialForm({ url, onSubmit }: CredentialFormProps) {
   };
 
   return (
-    <div className="border p-3 mt-3 rounded bg-gray-50">
+    <div className="mt-3 rounded-md border border-border bg-soft-surface p-3">
       <input
         className="border p-2 w-full mb-2"
         placeholder="Username / Email"
@@ -41,7 +41,7 @@ export default function CredentialForm({ url, onSubmit }: CredentialFormProps) {
       />
 
       <button
-        className="bg-green-600 text-white px-3 py-1 rounded"
+        className="rounded-md bg-accent px-3 py-1 text-accent-contrast hover:bg-accent-hover"
         onClick={handleSubmit}
       >
         Save Credential
