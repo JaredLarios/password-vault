@@ -42,7 +42,7 @@ export default function SearchWebsites() {
         className="border p-2 w-full rounded"
       />
 
-      {loading && <p className="text-gray-500">Searching...</p>}
+      {loading && <p className="text-muted-foreground">Searching...</p>}
 
       {results.length > 0 && (
         <ul className="border rounded p-3 space-y-2">
@@ -60,7 +60,7 @@ export default function SearchWebsites() {
       )}
 
       {!loading && query && results.length === 0 && (
-        <p className="text-gray-500">No matching websites found.</p>
+        <p className="text-muted-foreground">No matching websites found.</p>
       )}
     </div>
   );

@@ -98,6 +98,7 @@ public class WebsiteService
             .WebsiteCredentials
             .Where(credential =>
                 credential.Uuid == websiteCredentialUuid &&
+                credential.isActive &&
                 credential.Website.User.Uuid == userUuid
             )
             .FirstOrDefaultAsync();
@@ -326,8 +327,9 @@ public class WebsiteService
         WebsiteCredentialModel? credential = await GetWebsiteCredentialByUuid(userUuid, credentialUuid);
         if (credential == null) throw new ArgumentException("Website credential do not found.");
 
-        _context.WebsiteCredentials.Remove(credential);
-
+        credential.isActive = false;
+        credential.DeletedAt = DateTime.UtcNow;
+        credential.UpdatedAt = credential.DeletedAt;
         await _context.SaveChangesAsync();
         return new NewWebsiteResponse { Message = "Credentials deleted successfully" };
     }
