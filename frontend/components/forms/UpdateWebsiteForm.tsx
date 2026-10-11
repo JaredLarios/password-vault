@@ -111,9 +111,12 @@ export default function UpdateWebsiteForm({ websiteId }: { websiteId: string }) 
     try {
       await api.put(`/website/${websiteId}`, {
         websiteName: website.name,
-        websiteUrl: website.urls[0],
-        websiteUsername: website.credentials[0]?.username,
-        websitePassword: website.credentials[0]?.password,
+        websiteUrls: website.urls,
+        credentials: website.credentials.map((credential) => ({
+          websiteUserId: credential.id,
+          websiteUsername: credential.username,
+          websitePassword: credential.password,
+        })),
       });
       router.push("/websites");
     } catch {
@@ -145,7 +148,6 @@ export default function UpdateWebsiteForm({ websiteId }: { websiteId: string }) 
             key={`${website.id}-url-${index}`}
             aria-label={`URL ${index + 1}`}
             value={url}
-            readOnly={index > 0}
             onChange={(event) => updateUrl(index, event.target.value)}
           />
         ))}
@@ -159,7 +161,6 @@ export default function UpdateWebsiteForm({ websiteId }: { websiteId: string }) 
               aria-label={`Username ${index + 1}`}
               placeholder="Username"
               value={credential.username}
-              readOnly={index > 0}
               onChange={(event) => updateCredential(index, "username", event.target.value)}
             />
             <input
@@ -167,7 +168,6 @@ export default function UpdateWebsiteForm({ websiteId }: { websiteId: string }) 
               placeholder="Password"
               type="password"
               value={credential.password}
-              readOnly={index > 0}
               onChange={(event) => updateCredential(index, "password", event.target.value)}
             />
           </div>

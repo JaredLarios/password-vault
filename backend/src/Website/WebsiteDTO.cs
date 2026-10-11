@@ -24,11 +24,26 @@ public class NewWebsiteDTO
 
 public class UpdateWebsiteDTO
 {
-    [StringLength(2048)]
+    [StringLength(50)]
     public string? WebsiteName { get; set; }
 
-    [StringLength(2048)]
+    [StringLength(240)]
     public string? WebsiteUrl { get; set; }
+
+    [StringLength(420)]
+    public string? WebsiteUsername { get; set; }
+
+    [StringLength(420)]
+    public string? WebsitePassword { get; set; }
+
+    public List<string>? WebsiteUrls { get; set; }
+
+    public List<UpdateWebsiteCredentialDTO>? Credentials { get; set; }
+}
+
+public class UpdateWebsiteCredentialDTO
+{
+    public Guid WebsiteUserId { get; set; }
 
     [StringLength(420)]
     public string? WebsiteUsername { get; set; }
