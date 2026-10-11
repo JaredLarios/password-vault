@@ -8,6 +8,7 @@ interface WebsiteCredential {
   websiteUserId: string;
   websiteUsername: string;
   websitePassword: string;
+  websitePwdLakedCount?: number;
 }
 
 interface WebsiteSummary {
@@ -273,6 +274,7 @@ export default function WebsitesPage() {
                     {website.credentials.map((credential, credentialIndex) => {
                       const key = `${website.websiteId}:${credential.websiteUserId ?? credentialIndex}`;
                       const isVisible = Boolean(visiblePasswords[key]);
+                      const leakedCount = credential.websitePwdLakedCount ?? 0;
 
                       return (
                         <li key={key} className="py-3 first:pt-0 last:pb-0">
@@ -303,6 +305,12 @@ export default function WebsitesPage() {
                               {deletingCredentialId === credential.websiteUserId ? "Deleting..." : "Delete"}
                             </button>
                           </div>
+                          {leakedCount > 0 && (
+                            <p className="mt-2 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-sm font-medium text-red-700">
+                              Warning: This password has appeared in {leakedCount.toLocaleString()} known data breach
+                              {leakedCount === 1 ? "" : "es"}.
+                            </p>
+                          )}
                         </li>
                       );
                     })}
