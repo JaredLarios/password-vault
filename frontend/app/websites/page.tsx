@@ -1,16 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import api from "@/lib/axios";
 
 interface WebsiteCredential {
   websiteUserId: string;
   websiteUsername: string;
   websitePassword: string;
+  websitePwdLakedCount?: number;
 }
 
 interface WebsiteSummary {
-  websiteUuid?: string;
+  websiteId: string;
   websiteName: string;
   urls: string[];
   credentials: WebsiteCredential[];
@@ -32,6 +34,10 @@ export default function WebsitesPage() {
   const [createSuccess, setCreateSuccess] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [actionMessage, setActionMessage] = useState("");
+  const [deletingCredentialId, setDeletingCredentialId] = useState<string | null>(null);
+  const [copiedFields, setCopiedFields] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const controller = new AbortController();
@@ -39,6 +45,7 @@ export default function WebsitesPage() {
     const timer = setTimeout(async () => {
       try {
         setLoading(true);
+        setError("");
 
         const params =
           query.trim().length > 0
@@ -55,7 +62,10 @@ export default function WebsitesPage() {
         
         setWebsites(response.data);
       } catch (error) {
-        console.error(error);
+        if (!controller.signal.aborted) {
+          console.error(error);
+          setError("Unable to load websites. Please try again.");
+        }
       } finally {
         setLoading(false);
       }
@@ -72,6 +82,56 @@ export default function WebsitesPage() {
       ...current,
       [key]: !current[key],
     }));
+  }
+
+  function generateSecurePassword(length = 18) {
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[]{};:,.<>?";
+    let password = "";
+
+    for (let index = 0; index < length; index += 1) {
+      const randomIndex = Math.floor(Math.random() * characters.length);
+      password += characters[randomIndex];
+    }
+
+    return password;
+  }
+
+  async function handleCopyValue(key: string, field: "username" | "password", value: string) {
+    if (!value || !navigator.clipboard) return;
+
+    try {
+      await navigator.clipboard.writeText(value);
+      const copyKey = `${key}:${field}`;
+      setCopiedFields((current) => ({ ...current, [copyKey]: true }));
+      window.setTimeout(() => {
+        setCopiedFields((current) => ({ ...current, [copyKey]: false }));
+      }, 1200);
+    } catch {
+      // Ignore clipboard errors to keep the UI responsive.
+    }
+  }
+
+  async function handleDeleteCredential(credentialUuid: string) {
+    if (!window.confirm("Delete these credentials? This action cannot be undone.")) return;
+
+    setDeletingCredentialId(credentialUuid);
+    setDeleteError("");
+    setActionMessage("");
+
+    try {
+      const { data } = await api.delete<{ message: string }>(`/website/${credentialUuid}`);
+      setWebsites((current) => current.map((website) => ({
+        ...website,
+        credentials: website.credentials.filter(
+          (credential) => credential.websiteUserId !== credentialUuid,
+        ),
+      })));
+      setActionMessage(data.message || "Credentials deleted successfully.");
+    } catch {
+      setDeleteError("Unable to delete these credentials. Please try again.");
+    } finally {
+      setDeletingCredentialId(null);
+    }
   }
 
   async function handleCreateCredentials(event: React.FormEvent<HTMLFormElement>) {
@@ -106,11 +166,11 @@ export default function WebsitesPage() {
 
   return (
     <main className="mx-auto max-w-5xl p-6">
-      <header className="mb-6 border-b border-gray-300 pb-4">
+      <header className="mb-6 border-b border-border pb-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold">Websites</h1>
-            <p className="mt-1 text-sm text-gray-600">Your saved website credentials</p>
+            <p className="mt-1 text-sm text-muted-foreground">Your saved website credentials</p>
           </div>
           <button
             type="button"
@@ -125,15 +185,17 @@ export default function WebsitesPage() {
         </div>
       </header>
 
-      {createSuccess && <p role="status" className="mb-4 text-green-700">{createSuccess}</p>}
+      {createSuccess && <p role="status" className="mb-4 text-success">{createSuccess}</p>}
+      {actionMessage && <p role="status" className="mb-4 text-success">{actionMessage}</p>}
+      {deleteError && <p role="alert" className="mb-4 text-danger">{deleteError}</p>}
 
       {showCreateForm && (
         <form
-          className="mb-6 space-y-4 border border-gray-300 bg-white p-5"
+          className="mb-6 space-y-4 rounded-md border border-border bg-surface p-5"
           onSubmit={handleCreateCredentials}
         >
           <h2 className="text-lg font-semibold">New website credentials</h2>
-          {createError && <p role="alert" className="text-red-700">{createError}</p>}
+          {createError && <p role="alert" className="text-danger">{createError}</p>}
 
           <div>
             <label htmlFor="websiteName">Website name</label>
@@ -172,14 +234,41 @@ export default function WebsitesPage() {
 
           <div>
             <label htmlFor="websitePassword">Password</label>
-            <input
-              id="websitePassword"
-              name="websitePassword"
-              type="password"
-              required
-              value={createForm.websitePassword}
-              onChange={(event) => setCreateForm({ ...createForm, websitePassword: event.target.value })}
-            />
+            <div className="flex items-center gap-2">
+              <input
+                id="websitePassword"
+                name="websitePassword"
+                type="password"
+                required
+                value={createForm.websitePassword}
+                onChange={(event) => setCreateForm({ ...createForm, websitePassword: event.target.value })}
+                className="flex-1"
+              />
+              <button
+                type="button"
+                className="m-0 w-auto shrink-0 px-3 py-2 text-sm"
+                onClick={async () => {
+                  if (!createForm.websitePassword) return;
+                  try {
+                    await navigator.clipboard.writeText(createForm.websitePassword);
+                  } catch {
+                    // Ignore clipboard errors to keep the UI responsive.
+                  }
+                }}
+              >
+                Copy
+              </button>
+              <button
+                type="button"
+                className="m-0 w-auto shrink-0 px-3 py-2 text-sm"
+                onClick={() => setCreateForm((current) => ({
+                  ...current,
+                  websitePassword: generateSecurePassword(),
+                }))}
+              >
+                Generate password
+              </button>
+            </div>
           </div>
 
           <button type="submit" className="m-0 w-auto" disabled={creating}>
@@ -189,9 +278,9 @@ export default function WebsitesPage() {
       )}
 
       {loading && <p role="status">Loading websites...</p>}
-      {error && <p role="alert" className="text-red-700">{error}</p>}
+      {error && <p role="alert" className="text-danger">{error}</p>}
       {!loading && !error && websites.length === 0 && (
-        <p className="text-gray-600">No websites saved yet.</p>
+        <p className="text-muted-foreground">No websites saved yet.</p>
       )}
 
       <div className="space-y-4">
@@ -204,10 +293,18 @@ export default function WebsitesPage() {
         />
         {websites.map((website, websiteIndex) => (
           <article
-            key={website.websiteUuid ?? `${website.websiteName}-${websiteIndex}`}
-            className="border border-gray-300 bg-white p-5"
+            key={website.websiteId ?? `${website.websiteName}-${websiteIndex}`}
+            className="rounded-md border border-border bg-surface p-5 shadow-sm"
           >
-            <h2 className="mb-4 text-xl font-semibold">{website.websiteName}</h2>
+            <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-xl font-semibold">{website.websiteName}</h2>
+              <Link
+                href={`/websites/edit?id=${encodeURIComponent(website.websiteId)}`}
+                className="inline-flex w-auto items-center rounded-md border border-border bg-soft-surface px-3 py-2 text-sm font-medium text-foreground hover:bg-border"
+              >
+                Edit
+              </Link>
+            </header>
 
             <div className="grid gap-6 md:grid-cols-2">
               <section aria-label={`${website.websiteName} URLs`}>
@@ -215,13 +312,13 @@ export default function WebsitesPage() {
                 {website.urls.length > 0 ? (
                   <ul className="space-y-1">
                     {website.urls.map((url, urlIndex) => (
-                      <li key={`${url}-${urlIndex}`} className="break-all text-sm text-gray-700">
+                      <li key={`${url}-${urlIndex}`} className="break-all text-sm text-muted-foreground">
                         {url}
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-sm text-gray-500">No URLs</p>
+                  <p className="text-sm text-muted-foreground">No URLs</p>
                 )}
               </section>
 
@@ -230,19 +327,38 @@ export default function WebsitesPage() {
                 {website.credentials.length > 0 ? (
                   <ul className="divide-y divide-gray-200">
                     {website.credentials.map((credential, credentialIndex) => {
-                      const key = `${website.websiteUuid ?? website.websiteName}:${credential.websiteUserId ?? credentialIndex}`;
+                      const key = `${website.websiteId}:${credential.websiteUserId ?? credentialIndex}`;
                       const isVisible = Boolean(visiblePasswords[key]);
+                      const leakedCount = credential.websitePwdLakedCount ?? 0;
 
                       return (
                         <li key={key} className="py-3 first:pt-0 last:pb-0">
-                          <p className="break-all text-sm">
-                            <span className="font-medium">Username:</span> {credential.websiteUsername}
-                          </p>
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="break-all text-sm">
+                              <span className="font-medium">Username:</span> {credential.websiteUsername}
+                            </p>
+                            <button
+                              type="button"
+                              className="m-0 w-auto shrink-0 px-2 py-1 text-xs"
+                              aria-label={`Copy username for ${credential.websiteUsername}`}
+                              onClick={() => handleCopyValue(key, "username", credential.websiteUsername)}
+                            >
+                              {copiedFields[`${key}:username`] ? "Copied!" : "Copy"}
+                            </button>
+                          </div>
                           <div className="mt-1 flex items-center gap-3">
                             <p className="break-all text-sm">
                               <span className="font-medium">Password:</span>{" "}
                               {isVisible ? credential.websitePassword : "********"}
                             </p>
+                            <button
+                              type="button"
+                              className="m-0 w-auto shrink-0 px-2 py-1 text-xs"
+                              aria-label={`Copy password for ${credential.websiteUsername}`}
+                              onClick={() => handleCopyValue(key, "password", credential.websitePassword)}
+                            >
+                              {copiedFields[`${key}:password`] ? "Copied!" : "Copy"}
+                            </button>
                             <button
                               type="button"
                               className="m-0 w-auto shrink-0 px-2 py-1 text-sm"
@@ -252,13 +368,28 @@ export default function WebsitesPage() {
                             >
                               {isVisible ? "Hide" : "Show"}
                             </button>
+                            <button
+                              type="button"
+                              className="m-0 w-auto shrink-0 rounded-md bg-transparent px-2 py-1 text-sm text-danger hover:bg-soft-surface"
+                              disabled={!credential.websiteUserId || deletingCredentialId === credential.websiteUserId}
+                              aria-label={`Delete credentials for ${credential.websiteUsername}`}
+                              onClick={() => handleDeleteCredential(credential.websiteUserId)}
+                            >
+                              {deletingCredentialId === credential.websiteUserId ? "Deleting..." : "Delete"}
+                            </button>
                           </div>
+                          {leakedCount > 0 && (
+                            <p className="mt-2 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-sm font-medium text-red-700">
+                              Warning: This password has appeared in {leakedCount.toLocaleString()} known data breach
+                              {leakedCount === 1 ? "" : "es"}.
+                            </p>
+                          )}
                         </li>
                       );
                     })}
                   </ul>
                 ) : (
-                  <p className="text-sm text-gray-500">No credentials</p>
+                  <p className="text-sm text-muted-foreground">No credentials</p>
                 )}
               </section>
             </div>

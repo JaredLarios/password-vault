@@ -117,6 +117,10 @@ namespace backend.Migrations
                         .HasColumnType("varchar")
                         .HasColumnName("user_website_credential_password_fer");
 
+                    b.Property<int?>("WebsitePasswordLeakedCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_website_credential_password_leaked_count");
+
                     b.Property<string>("WebsitePasswordSha")
                         .IsRequired()
                         .HasColumnType("varchar")

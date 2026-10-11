@@ -25,6 +25,9 @@ public class WebsiteCredentialModel : BaseModel
     [Column("user_website_credential_password_sha", TypeName = "varchar")]
     public string WebsitePasswordSha { get; set; } = string.Empty;
 
+    [Column("user_website_credential_password_leaked_count")]
+    public int? WebsitePasswordLeakedCount { get; set; } = null;
+
     [Column("user_website_id")]
     public int WebsiteId { get; set; }
 

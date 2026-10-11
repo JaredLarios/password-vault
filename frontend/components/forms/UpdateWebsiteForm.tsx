@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import api from "@/lib/axios";
-import { router } from "next/client";
 import { useRouter } from "next/navigation";
 
 interface WebsiteResponse {
@@ -80,7 +79,7 @@ export default function UpdateWebsiteForm({ websiteId }: { websiteId: string }) 
   }, [websiteId]);
 
   if (loading) return <p>Loading...</p>;
-  if (!website) return <p role="alert" className="text-red-700">{error || "Website not found."}</p>;
+  if (!website) return <p role="alert" className="text-danger">{error || "Website not found."}</p>;
 
   const updateWebsiteName = (value: string) => {
     setWebsite({ ...website, name: value });
@@ -112,23 +111,25 @@ export default function UpdateWebsiteForm({ websiteId }: { websiteId: string }) 
     try {
       await api.put(`/website/${websiteId}`, {
         websiteName: website.name,
-        websiteUrl: website.urls[0],
-        websiteUsername: website.credentials[0]?.username,
-        websitePassword: website.credentials[0]?.password,
+        websiteUrls: website.urls,
+        credentials: website.credentials.map((credential) => ({
+          websiteUserId: credential.id,
+          websiteUsername: credential.username,
+          websitePassword: credential.password,
+        })),
       });
-      alert("Website updated successfully!");
+      router.push("/websites");
     } catch {
       setError("Error updating website.");
     } finally {
       setSaving(false);
-      router.push("/websites");
     }
   };
 
   return (
-    <div className="space-y-6 p-6 border rounded bg-white shadow">
+    <div className="space-y-6 rounded-md border border-border bg-surface p-5 shadow-sm sm:p-6">
       <h2 className="text-2xl font-bold">Update Website</h2>
-      {error && <p role="alert" className="text-red-700">{error}</p>}
+      {error && <p role="alert" className="text-danger">{error}</p>}
 
       {/* Website Name */}
       <div>
@@ -147,7 +148,6 @@ export default function UpdateWebsiteForm({ websiteId }: { websiteId: string }) 
             key={`${website.id}-url-${index}`}
             aria-label={`URL ${index + 1}`}
             value={url}
-            readOnly={index > 0}
             onChange={(event) => updateUrl(index, event.target.value)}
           />
         ))}
@@ -161,7 +161,6 @@ export default function UpdateWebsiteForm({ websiteId }: { websiteId: string }) 
               aria-label={`Username ${index + 1}`}
               placeholder="Username"
               value={credential.username}
-              readOnly={index > 0}
               onChange={(event) => updateCredential(index, "username", event.target.value)}
             />
             <input
@@ -169,7 +168,6 @@ export default function UpdateWebsiteForm({ websiteId }: { websiteId: string }) 
               placeholder="Password"
               type="password"
               value={credential.password}
-              readOnly={index > 0}
               onChange={(event) => updateCredential(index, "password", event.target.value)}
             />
           </div>
@@ -177,7 +175,7 @@ export default function UpdateWebsiteForm({ websiteId }: { websiteId: string }) 
       </section>
 
       <button
-        className="bg-blue-600 text-white px-4 py-2 rounded"
+        className="rounded-md bg-accent px-4 py-2 text-accent-contrast hover:bg-accent-hover"
         disabled={saving}
         onClick={handleSubmit}
       >
