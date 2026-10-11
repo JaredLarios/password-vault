@@ -37,6 +37,7 @@ export default function WebsitesPage() {
   const [deleteError, setDeleteError] = useState("");
   const [actionMessage, setActionMessage] = useState("");
   const [deletingCredentialId, setDeletingCredentialId] = useState<string | null>(null);
+  const [copiedFields, setCopiedFields] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const controller = new AbortController();
@@ -81,6 +82,21 @@ export default function WebsitesPage() {
       ...current,
       [key]: !current[key],
     }));
+  }
+
+  async function handleCopyValue(key: string, field: "username" | "password", value: string) {
+    if (!value || !navigator.clipboard) return;
+
+    try {
+      await navigator.clipboard.writeText(value);
+      const copyKey = `${key}:${field}`;
+      setCopiedFields((current) => ({ ...current, [copyKey]: true }));
+      window.setTimeout(() => {
+        setCopiedFields((current) => ({ ...current, [copyKey]: false }));
+      }, 1200);
+    } catch {
+      // Ignore clipboard errors to keep the UI responsive.
+    }
   }
 
   async function handleDeleteCredential(credentialUuid: string) {
@@ -278,14 +294,32 @@ export default function WebsitesPage() {
 
                       return (
                         <li key={key} className="py-3 first:pt-0 last:pb-0">
-                          <p className="break-all text-sm">
-                            <span className="font-medium">Username:</span> {credential.websiteUsername}
-                          </p>
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="break-all text-sm">
+                              <span className="font-medium">Username:</span> {credential.websiteUsername}
+                            </p>
+                            <button
+                              type="button"
+                              className="m-0 w-auto shrink-0 px-2 py-1 text-xs"
+                              aria-label={`Copy username for ${credential.websiteUsername}`}
+                              onClick={() => handleCopyValue(key, "username", credential.websiteUsername)}
+                            >
+                              {copiedFields[`${key}:username`] ? "Copied!" : "Copy"}
+                            </button>
+                          </div>
                           <div className="mt-1 flex items-center gap-3">
                             <p className="break-all text-sm">
                               <span className="font-medium">Password:</span>{" "}
                               {isVisible ? credential.websitePassword : "********"}
                             </p>
+                            <button
+                              type="button"
+                              className="m-0 w-auto shrink-0 px-2 py-1 text-xs"
+                              aria-label={`Copy password for ${credential.websiteUsername}`}
+                              onClick={() => handleCopyValue(key, "password", credential.websitePassword)}
+                            >
+                              {copiedFields[`${key}:password`] ? "Copied!" : "Copy"}
+                            </button>
                             <button
                               type="button"
                               className="m-0 w-auto shrink-0 px-2 py-1 text-sm"
