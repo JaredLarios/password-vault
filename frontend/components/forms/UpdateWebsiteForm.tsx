@@ -60,6 +60,20 @@ export default function UpdateWebsiteForm({ websiteId }: { websiteId: string }) 
       setError("");
 
       try {
+        // MOCK DATA FOR TESTING
+        // const result = {
+        //   websiteName: "Test Website",
+        //   urls: ["https://example.com"],
+        //   credentials: [
+        //     {
+        //       websiteUserId: "123",
+        //       websiteUsername: "angie",
+        //       websitePassword: "mypassword",
+        //       leakCount: 0,
+        //     }
+        //   ]
+        // };
+
         const { data } = await api.get<WebsiteResponse[]>("/website", {
           params: { websiteUuid: websiteId },
         });
@@ -93,7 +107,6 @@ export default function UpdateWebsiteForm({ websiteId }: { websiteId: string }) 
     }
 
     fetchWebsite();
-
     return () => {
       active = false;
     };
@@ -151,118 +164,121 @@ export default function UpdateWebsiteForm({ websiteId }: { websiteId: string }) 
   };
 
   return (
-    <div className="space-y-6 p-6 border rounded bg-white shadow">
-      <h2 className="text-2xl font-bold">Update Website</h2>
-      {error && <p role="alert" className="text-red-700">{error}</p>}
+    <div className="max-w-md mx-auto">
+      <div className="space-y-3 p-3 border rounded bg-white shadow-sm">
+        <h2 className="text-lg font-semibold">Update Website</h2>
+        {error && <p role="alert" className="text-red-700 text-sm">{error}</p>}
 
-      {/* Website Name */}
-      <div>
-        <label className="font-semibold">Website Name</label>
-        <input
-          className="border p-2 w-full"
-          value={website.name}
-          onChange={(e) => updateWebsiteName(e.target.value)}
-        />
-      </div>
-
-      <section className="space-y-3">
-        <h3 className="font-semibold">URLs</h3>
-        {website.urls.map((url, index) => (
+        {/* Website Name */}
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Website Name</label>
           <input
-            key={`${website.id}-url-${index}`}
-            aria-label={`URL ${index + 1}`}
-            value={url}
-            readOnly={index > 0}
-            onChange={(event) => updateUrl(index, event.target.value)}
+            className="border p-1 text-sm h-8 w-full bg-white rounded"
+            value={website.name}
+            onChange={(e) => updateWebsiteName(e.target.value)}
           />
-        ))}
-      </section>
+        </div>
 
-      <section className="space-y-3">
-        <h3 className="font-semibold">Credentials</h3>
+        {/* URLs */}
+        <section className="space-y-1">
+          <h3 className="text-sm font-semibold">URLs</h3>
+          {website.urls.map((url, index) => (
+            <input
+              key={`${website.id}-url-${index}`}
+              aria-label={`URL ${index + 1}`}
+              value={url}
+              readOnly={index > 0}
+              onChange={(event) => updateUrl(index, event.target.value)}
+              className="border p-1 text-sm h-8 w-full bg-white rounded"
+            />
+          ))}
+        </section>
 
-        {website.credentials.map((credential, index) => (
-          <div key={credential.id} className="space-y-2 border p-3">
+        {/* Credentials */}
+        <section className="space-y-2">
+          <h3 className="text-sm font-semibold">Credentials</h3>
 
-            {/* Username + Copy */}
-            <div className="flex gap-2">
-              <input
-                aria-label={`Username ${index + 1}`}
-                placeholder="Username"
-                value={credential.username}
-                readOnly={index > 0}
-                onChange={(event) =>
-                  updateCredential(index, "username", event.target.value)
-                }
-                className="flex-1"
-              />
+          {website.credentials.map((credential, index) => (
+            <div key={credential.id} className="space-y-1 border p-2 rounded">
 
-              {/* ⭐ Copy Username Button */}
-              <button
-                type="button"
-                onClick={() => copyToClipboard(credential.username)}
-                className="bg-gray-200 px-2 py-1 rounded hover:bg-gray-300"
-              >
-                Copy
-              </button>
-            </div>
+              {/* Username */}
+              <div className="flex gap-2">
+                <input
+                  aria-label={`Username ${index + 1}`}
+                  placeholder="Username"
+                  value={credential.username}
+                  readOnly={index > 0}
+                  onChange={(event) =>
+                    updateCredential(index, "username", event.target.value)
+                  }
+                  className="flex-1 min-w-[140px] border p-1 text-xs h-7 bg-white rounded"
+                />
 
-            {/* Password + Copy + Generate */}
-            <div className="flex gap-2">
-              <input
-                aria-label={`Password ${index + 1}`}
-                placeholder="Password"
-                type="password"
-                value={credential.password}
-                readOnly={index > 0}
-                onChange={(event) =>
-                  updateCredential(index, "password", event.target.value)
-                }
-                className="flex-1"
-              />
-
-              {/* ⭐ Copy Password Button */}
-              <button
-                type="button"
-                onClick={() => copyToClipboard(credential.password)}
-                className="bg-gray-200 px-2 py-1 rounded hover:bg-gray-300"
-              >
-                Copy
-              </button>
-
-              {index === 0 && (
                 <button
                   type="button"
-                  onClick={() => generatePasswordForCredential(index)}
-                  className="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700"
+                  onClick={() => copyToClipboard(credential.username)}
+                  className="bg-gray-200 text-xs px-2 py-1 rounded hover:bg-gray-300"
                 >
-                  Generate
+                  Copy Username
                 </button>
-              )}
-            </div>
+              </div>
 
-            {/* Leak Counter */}
-            <p className="text-sm text-gray-700">
-              Leaks: {credential.leakCount ?? 0}
-            </p>
+              {/* Password */}
+              <div className="flex gap-2">
+                <input
+                  aria-label={`Password ${index + 1}`}
+                  placeholder="Password"
+                  type="password"
+                  value={credential.password}
+                  readOnly={index > 0}
+                  onChange={(event) =>
+                    updateCredential(index, "password", event.target.value)
+                  }
+                  className="flex-1 min-w-[140px] border p-1 text-xs h-7 bg-white rounded"
+                />
 
-            {(credential.leakCount ?? 0) > 1 && (
-              <p className="text-sm text-red-600 font-semibold">
-                ⚠️ Warning: This password has been leaked multiple times!
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(credential.password)}
+                  className="bg-gray-200 text-xs px-2 py-1 rounded hover:bg-gray-300"
+                >
+                  Copy Password
+                </button>
+
+                {index === 0 && (
+                  <button
+                    type="button"
+                    onClick={() => generatePasswordForCredential(index)}
+                    className="bg-purple-600 text-white text-xs px-2 py-1 rounded hover:bg-purple-700"
+                  >
+                    Generate Random Password
+                  </button>
+                )}
+              </div>
+
+              {/* Leak Counter */}
+              <p className="text-xs text-gray-600">
+                Leaks: {credential.leakCount ?? 0}
               </p>
-            )}
 
-          </div>
-        ))}
-      </section>
+              {(credential.leakCount ?? 0) > 1 && (
+                <p className="text-xs text-red-600 font-semibold">
+                  ⚠️ Warning: This password has been leaked multiple times!
+                </p>
+              )}
 
-      <button
-        className="bg-blue-600 text-white px-4 py-2 rounded"
-        disabled={saving}
-        onClick={handleSubmit}
-      >
-        {saving ? "Saving..." : "Save Changes"}
-      </button>
+            </div>
+          ))}
+        </section>
+
+        <button
+          className="bg-blue-600 text-white text-sm px-3 py-1.5 rounded"
+          disabled={saving}
+          onClick={handleSubmit}
+        >
+          {saving ? "Saving..." : "Save"}
+        </button>
+      </div>
     </div>
   );
 }
