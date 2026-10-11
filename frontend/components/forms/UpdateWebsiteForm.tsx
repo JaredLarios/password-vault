@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import api from "@/lib/axios";
-import { router } from "next/client";
 import { useRouter } from "next/navigation";
 
 interface WebsiteResponse {
@@ -12,6 +11,7 @@ interface WebsiteResponse {
     websiteUserId: string;
     websiteUsername: string;
     websitePassword: string;
+    leakCount?: number;
   }[];
 }
 
@@ -23,7 +23,21 @@ interface EditableWebsite {
     id: string;
     username: string;
     password: string;
+    leakCount?: number;
   }[];
+}
+
+function generateStrongPassword(length = 12) {
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[]{}<>?";
+  let password = "";
+
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * chars.length);
+    password += chars[randomIndex];
+  }
+
+  return password;
 }
 
 export default function UpdateWebsiteForm({ websiteId }: { websiteId: string }) {
@@ -32,6 +46,11 @@ export default function UpdateWebsiteForm({ websiteId }: { websiteId: string }) 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    alert("Copied to clipboard!");
+  };
 
   useEffect(() => {
     let active = true;
@@ -61,8 +80,9 @@ export default function UpdateWebsiteForm({ websiteId }: { websiteId: string }) 
                   id: credential.websiteUserId,
                   username: credential.websiteUsername,
                   password: credential.websitePassword,
+                  leakCount: credential.leakCount ?? 0,
                 }))
-              : [{ id: "new-credential", username: "", password: "" }],
+              : [{ id: "new-credential", username: "", password: "", leakCount: 0 }],
           });
         }
       } catch {
@@ -103,6 +123,11 @@ export default function UpdateWebsiteForm({ websiteId }: { websiteId: string }) 
       [field]: value,
     };
     setWebsite({ ...website, credentials: updatedCredentials });
+  };
+
+  const generatePasswordForCredential = (index: number) => {
+    const newPassword = generateStrongPassword(12);
+    updateCredential(index, "password", newPassword);
   };
 
   const handleSubmit = async () => {
@@ -155,23 +180,78 @@ export default function UpdateWebsiteForm({ websiteId }: { websiteId: string }) 
 
       <section className="space-y-3">
         <h3 className="font-semibold">Credentials</h3>
+
         {website.credentials.map((credential, index) => (
           <div key={credential.id} className="space-y-2 border p-3">
-            <input
-              aria-label={`Username ${index + 1}`}
-              placeholder="Username"
-              value={credential.username}
-              readOnly={index > 0}
-              onChange={(event) => updateCredential(index, "username", event.target.value)}
-            />
-            <input
-              aria-label={`Password ${index + 1}`}
-              placeholder="Password"
-              type="password"
-              value={credential.password}
-              readOnly={index > 0}
-              onChange={(event) => updateCredential(index, "password", event.target.value)}
-            />
+
+            {/* Username + Copy */}
+            <div className="flex gap-2">
+              <input
+                aria-label={`Username ${index + 1}`}
+                placeholder="Username"
+                value={credential.username}
+                readOnly={index > 0}
+                onChange={(event) =>
+                  updateCredential(index, "username", event.target.value)
+                }
+                className="flex-1"
+              />
+
+              {/* ⭐ Copy Username Button */}
+              <button
+                type="button"
+                onClick={() => copyToClipboard(credential.username)}
+                className="bg-gray-200 px-2 py-1 rounded hover:bg-gray-300"
+              >
+                Copy
+              </button>
+            </div>
+
+            {/* Password + Copy + Generate */}
+            <div className="flex gap-2">
+              <input
+                aria-label={`Password ${index + 1}`}
+                placeholder="Password"
+                type="password"
+                value={credential.password}
+                readOnly={index > 0}
+                onChange={(event) =>
+                  updateCredential(index, "password", event.target.value)
+                }
+                className="flex-1"
+              />
+
+              {/* ⭐ Copy Password Button */}
+              <button
+                type="button"
+                onClick={() => copyToClipboard(credential.password)}
+                className="bg-gray-200 px-2 py-1 rounded hover:bg-gray-300"
+              >
+                Copy
+              </button>
+
+              {index === 0 && (
+                <button
+                  type="button"
+                  onClick={() => generatePasswordForCredential(index)}
+                  className="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700"
+                >
+                  Generate
+                </button>
+              )}
+            </div>
+
+            {/* Leak Counter */}
+            <p className="text-sm text-gray-700">
+              Leaks: {credential.leakCount ?? 0}
+            </p>
+
+            {(credential.leakCount ?? 0) > 1 && (
+              <p className="text-sm text-red-600 font-semibold">
+                ⚠️ Warning: This password has been leaked multiple times!
+              </p>
+            )}
+
           </div>
         ))}
       </section>
