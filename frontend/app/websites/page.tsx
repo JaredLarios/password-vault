@@ -84,6 +84,18 @@ export default function WebsitesPage() {
     }));
   }
 
+  function generateSecurePassword(length = 18) {
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[]{};:,.<>?";
+    let password = "";
+
+    for (let index = 0; index < length; index += 1) {
+      const randomIndex = Math.floor(Math.random() * characters.length);
+      password += characters[randomIndex];
+    }
+
+    return password;
+  }
+
   async function handleCopyValue(key: string, field: "username" | "password", value: string) {
     if (!value || !navigator.clipboard) return;
 
@@ -222,14 +234,41 @@ export default function WebsitesPage() {
 
           <div>
             <label htmlFor="websitePassword">Password</label>
-            <input
-              id="websitePassword"
-              name="websitePassword"
-              type="password"
-              required
-              value={createForm.websitePassword}
-              onChange={(event) => setCreateForm({ ...createForm, websitePassword: event.target.value })}
-            />
+            <div className="flex items-center gap-2">
+              <input
+                id="websitePassword"
+                name="websitePassword"
+                type="password"
+                required
+                value={createForm.websitePassword}
+                onChange={(event) => setCreateForm({ ...createForm, websitePassword: event.target.value })}
+                className="flex-1"
+              />
+              <button
+                type="button"
+                className="m-0 w-auto shrink-0 px-3 py-2 text-sm"
+                onClick={async () => {
+                  if (!createForm.websitePassword) return;
+                  try {
+                    await navigator.clipboard.writeText(createForm.websitePassword);
+                  } catch {
+                    // Ignore clipboard errors to keep the UI responsive.
+                  }
+                }}
+              >
+                Copy
+              </button>
+              <button
+                type="button"
+                className="m-0 w-auto shrink-0 px-3 py-2 text-sm"
+                onClick={() => setCreateForm((current) => ({
+                  ...current,
+                  websitePassword: generateSecurePassword(),
+                }))}
+              >
+                Generate password
+              </button>
+            </div>
           </div>
 
           <button type="submit" className="m-0 w-auto" disabled={creating}>
