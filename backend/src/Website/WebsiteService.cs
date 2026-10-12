@@ -98,6 +98,7 @@ public class WebsiteService
             .WebsiteCredentials
             .Where(credential =>
                 credential.Uuid == websiteCredentialUuid &&
+                credential.isActive &&
                 credential.Website.User.Uuid == userUuid
             )
             .FirstOrDefaultAsync();
@@ -237,32 +238,40 @@ public class WebsiteService
     public async Task<NewWebsiteResponse> UpdateWebsiteAsync(Guid userUuid, Guid websiteUuid, UpdateWebsiteDTO request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        string passwordHash = string.Empty;
-        int? passwordLeakedCount = null;
-
         var website = await GetWebsiteByUuidAsync(userUuid, websiteUuid);
-
-        if (!string.IsNullOrWhiteSpace(request.WebsitePassword))
-        {
-            passwordHash = _sha1.GetHash(request.WebsitePassword);
-            passwordLeakedCount = await GetPasswordSecurity(passwordHash);
-        }
+        if (website == null) throw new ArgumentException("Website not found.");
 
         await using var transaction = await _context.Database.BeginTransactionAsync();
 
         try
         {
-
-            if (website == null) throw new ArgumentException("Website not found.");
-
             if (!string.IsNullOrWhiteSpace(request.WebsiteName)) website.WebsiteName = request.WebsiteName;
 
-
-            if (!string.IsNullOrWhiteSpace(request.WebsiteUrl))
+            if (request.WebsiteUrls != null)
             {
-                var existingLink = website.WebsiteLinks.FirstOrDefault(link =>
-                    link.isActive && link.WebsiteUrl == request.WebsiteUrl);
+                var activeLinks = website.WebsiteLinks.Where(link => link.isActive).ToList();
+                for (var index = 0; index < request.WebsiteUrls.Count; index++)
+                {
+                    var url = request.WebsiteUrls[index];
+                    if (string.IsNullOrWhiteSpace(url)) continue;
 
+                    if (index < activeLinks.Count)
+                    {
+                        activeLinks[index].WebsiteUrl = url;
+                    }
+                    else
+                    {
+                        website.WebsiteLinks.Add(new WebsiteLinkModel
+                        {
+                            WebsiteUrl = url,
+                            WebsiteId = website.Id
+                        });
+                    }
+                }
+            }
+            else if (!string.IsNullOrWhiteSpace(request.WebsiteUrl))
+            {
+                var existingLink = website.WebsiteLinks.FirstOrDefault(link => link.isActive);
                 if (existingLink == null)
                 {
                     website.WebsiteLinks.Add(new WebsiteLinkModel
@@ -277,10 +286,44 @@ public class WebsiteService
                 }
             }
 
-            if (!string.IsNullOrWhiteSpace(request.WebsiteUsername) ||
-                !string.IsNullOrWhiteSpace(request.WebsitePassword))
+            if (request.Credentials != null)
             {
-                var credential = website.WebsiteCredentials.FirstOrDefault(c => c.isActive);
+                var duplicateCredentialIds = request.Credentials
+                    .GroupBy(credential => credential.WebsiteUserId)
+                    .Any(group => group.Count() > 1);
+                if (duplicateCredentialIds)
+                {
+                    throw new ArgumentException("A credential was included more than once.");
+                }
+
+                foreach (var requestedCredential in request.Credentials)
+                {
+                    var credential = website.WebsiteCredentials.FirstOrDefault(existing =>
+                        existing.isActive && existing.Uuid == requestedCredential.WebsiteUserId);
+                    if (credential == null)
+                    {
+                        throw new ArgumentException("A credential was not found for this website.");
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(requestedCredential.WebsiteUsername))
+                    {
+                        credential.WebsiteUsernameFer = _crypto.GetEncryptedText(requestedCredential.WebsiteUsername);
+                        credential.WebsiteUsernameSha = _sha256.GetHash(requestedCredential.WebsiteUsername);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(requestedCredential.WebsitePassword))
+                    {
+                        var passwordHash = _sha1.GetHash(requestedCredential.WebsitePassword);
+                        credential.WebsitePasswordFer = _crypto.GetEncryptedText(requestedCredential.WebsitePassword);
+                        credential.WebsitePasswordSha = passwordHash;
+                        credential.WebsitePasswordLeakedCount = await GetPasswordSecurity(passwordHash);
+                    }
+                }
+            }
+            else if (!string.IsNullOrWhiteSpace(request.WebsiteUsername) ||
+                     !string.IsNullOrWhiteSpace(request.WebsitePassword))
+            {
+                var credential = website.WebsiteCredentials.FirstOrDefault(existing => existing.isActive);
                 if (credential == null)
                 {
                     credential = new WebsiteCredentialModel
@@ -299,9 +342,10 @@ public class WebsiteService
 
                 if (!string.IsNullOrWhiteSpace(request.WebsitePassword))
                 {
+                    var passwordHash = _sha1.GetHash(request.WebsitePassword);
                     credential.WebsitePasswordFer = _crypto.GetEncryptedText(request.WebsitePassword);
                     credential.WebsitePasswordSha = passwordHash;
-                    credential.WebsitePasswordLeakedCount = passwordLeakedCount;
+                    credential.WebsitePasswordLeakedCount = await GetPasswordSecurity(passwordHash);
                 }
             }
 
@@ -326,8 +370,9 @@ public class WebsiteService
         WebsiteCredentialModel? credential = await GetWebsiteCredentialByUuid(userUuid, credentialUuid);
         if (credential == null) throw new ArgumentException("Website credential do not found.");
 
-        _context.WebsiteCredentials.Remove(credential);
-
+        credential.isActive = false;
+        credential.DeletedAt = DateTime.UtcNow;
+        credential.UpdatedAt = credential.DeletedAt;
         await _context.SaveChangesAsync();
         return new NewWebsiteResponse { Message = "Credentials deleted successfully" };
     }

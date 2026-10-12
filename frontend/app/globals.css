@@ -1,48 +1,115 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+  --background: #f4f7fa;
+  --surface: #ffffff;
+  --soft-surface: #eaf0f6;
+  --foreground: #1b2733;
+  --muted-foreground: #536273;
+  --border: #d4dde7;
+  --accent: #245b91;
+  --accent-hover: #1b4978;
+  --accent-contrast: #ffffff;
+  --danger: #ad3027;
+  --success: #176448;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #171e26;
+  --surface: #202a35;
+  --soft-surface: #2b3948;
+  --foreground: #edf3f8;
+  --muted-foreground: #bac7d4;
+  --border: #3d4c5c;
+  --accent: #79b6e8;
+  --accent-hover: #9acaf0;
+  --accent-contrast: #142333;
+  --danger: #ff928b;
+  --success: #82d9ac;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-soft-surface: var(--soft-surface);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --font-sans: Arial, Helvetica, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
+  min-height: 100vh;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  transition: background-color 180ms ease, color 180ms ease;
 }
+
 @layer base {
-
-  /* Inputs */
   input {
-    @apply border border-gray-300 rounded-md p-2 w-full bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500;
+    @apply min-h-12 w-full rounded-md border border-border bg-surface px-3 py-2.5 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent;
   }
 
-  /* Labels */
   label {
-    @apply block text-sm font-medium text-gray-700 mb-1;
+    @apply mb-1 block text-sm font-medium text-foreground;
   }
 
-  /* Buttons */
   button {
-    @apply bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition w-full block mt-4;
+    @apply inline-flex min-h-12 w-auto items-center justify-center rounded-md bg-accent px-5 py-2.5 text-base font-medium text-accent-contrast transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
   }
 
-  /* Form wrapper spacing */
-  form {
-    @apply space-y-4;
-  }
+}
+
+.site-header {
+  @apply flex items-center justify-between gap-4 border-b border-border bg-surface px-4 py-3 sm:px-6;
+}
+
+.site-footer {
+  @apply border-t border-border bg-surface px-4 py-5 text-center text-sm text-muted-foreground;
+}
+
+.theme-toggle {
+  border: 1px solid var(--border);
+  background: var(--soft-surface);
+  color: var(--foreground);
+}
+
+.theme-toggle:hover {
+  background: var(--border);
+}
+
+.nav-link-active {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.nav-link-inactive {
+  color: var(--foreground);
+}
+
+.nav-link-inactive:hover,
+.logout-btn:hover {
+  background: var(--soft-surface);
+}
+
+.logout-btn {
+  color: var(--danger);
+}
+
+.error {
+  color: var(--danger);
+}
+
+.success {
+  color: var(--success);
 }

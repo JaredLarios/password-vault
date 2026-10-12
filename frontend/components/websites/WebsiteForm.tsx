@@ -64,14 +64,14 @@ export default function WebsiteForm() {
       ))}
 
       <button
-        className="bg-blue-600 text-white px-4 py-2 rounded"
+        className="rounded-md bg-accent px-4 py-2 text-accent-contrast hover:bg-accent-hover"
         onClick={handleAddUrl}
       >
         Add Another URL
       </button>
 
       <button
-        className="bg-green-600 text-white px-4 py-2 rounded"
+        className="rounded-md bg-accent px-4 py-2 text-accent-contrast hover:bg-accent-hover"
         onClick={handleSubmit}
       >
         Save Website
